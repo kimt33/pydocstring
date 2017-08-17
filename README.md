@@ -1,0 +1,2 @@
+# pydocstring
+Manage Python docstrings
