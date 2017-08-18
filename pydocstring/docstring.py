@@ -89,6 +89,79 @@ class Docstring:
                            'references', 'examples']:
                 print('WARNING: keyword, {0}, is not available in the list.'.format(key))
 
+    def make_numpy(self, line_length=100, indent_level=0):
+        """Returns the numpy docstring that corresponds to the Docstring instance.
+
+        Parameters
+        ----------
+        line_length : int
+            Maximum number of characters allowed in each width
+        indent_level : int
+            Number of indents (4 spaces) that are needed for the docstring
+        """
+        avail_width = line_length - 4 * indent_level
+        tabs = '{0}'.format(4 * indent_level * ' ')
+        wrapper = textwrap.TextWrapper(width=avail_width, expand_tabs=True, tabsize=4,
+                                       replace_whitespace=False, drop_whitespace=True,
+                                       initial_indent=tabs, subsequent_indent=tabs,
+                                       break_long_words=False)
+
+        output = '"""'
+        # summary
+        # FIXME: what if summary is not given?
+        if len(self.info['summary']) < avail_width - (6 if len(self.info) == 1 else 3):
+            output += '{0}'.format(self.info['summary'])
+        elif len(self.info['summary']) < avail_width:
+            output += '\n{0}'.format(wrapper.fill(self.info['summary']))
+        else:
+            print('WARNING: summary is too long for the given indent level and line length.')
+            output += '{0}'.format(self.info['summary'])
+
+        # extended
+        # FIXME: textwrap is not terribly reliable
+        # FIXME: multiline string will contain all the tabs/spaces. these need to be removed
+        if 'extended' in self.info:
+            for paragraph in self.info['extended']:
+                output += '\n\n{0}'.format(wrapper.fill(paragraph))
+
+        # parameters
+        if 'parameters' in self.info:
+            output += wrapper.fill('\n\nParameters\n----------')
+            for param in self.info['parameters']:
+                output += '\n{0}'.format(param.make_numpy(line_length=line_length,
+                                                          indent_level=indent_level+1))
+
+        # other parameters
+        if 'other parameters' in self.info:
+            output += wrapper.fill('\n\nOther Parameters\n----------------')
+            for param in self.info['other parameters']:
+                output += '\n{0}'.format(param.make_numpy(line_length=line_length,
+                                                          indent_level=indent_level+1))
+
+        # returns
+        if 'returns' in self.info:
+            output += wrapper.fill('\n\nReturns\n-------')
+            for return_info in self.info['returns']:
+                output += '\n{0}'.format(return_info.make_numpy(line_length=line_length,
+                                                                indent_level=indent_level+1))
+
+        # yields
+        if 'yields' in self.info:
+            output += wrapper.fill('\n\nYields\n------')
+            for yield_info in self.info['yields']:
+                output += '\n{0}'.format(yield_info.make_numpy(line_length=line_length,
+                                                               indent_level=indent_level+1))
+
+        # raises
+        if 'raises' in self.info:
+            output += wrapper.fill('\n\nRaises\n------')
+            for raise_info in self.info['raises']:
+                output += '\n{0}'.format(raise_info.make_numpy(line_length=line_length,
+                                                               indent_level=indent_level+1))
+
+        output += '\n"""'
+        return output
+
 
 # TODO: turn each section into a class
 class ParamDocstring:
