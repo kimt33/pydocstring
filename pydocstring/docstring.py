@@ -145,7 +145,8 @@ class Docstring:
             output += wrapper.fill(headers[section])
             for data in self.info[section]:
                 output += '\n{0}'.format(data.make_numpy(line_length=line_length,
-                                                         indent_level=indent_level+1))
+                                                         indent_level=indent_level+1,
+                                                         tab_width=tab_width))
 
         # Sections that contains list of strings
         sections = ['notes', 'references', 'examples']
