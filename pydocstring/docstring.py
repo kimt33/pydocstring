@@ -1,6 +1,7 @@
 import textwrap
 
 
+# FIXME: maybe use attributes to store header/section contents instead of a dictionary?
 class Docstring:
     """Class for storing docstring information.
 
@@ -70,7 +71,7 @@ class Docstring:
             # FIXME: parameters may have MethodDocstring (which I think is okay when function is a
             #        parameter). methods may have ParamDocstring (which I think may be a problem).
             if key in ['parameters', 'other parameters', 'attributes', 'methods', 'returns',
-                       'yields']:
+                       'yields', 'see also']:
                 data = []
                 for info_dict in val:
                     try:
@@ -78,8 +79,13 @@ class Docstring:
                     except KeyError:
                         data.append(MethodDocstring(**info_dict))
                 self.info[key] = data
-            elif key in ['raises']:
+            elif key == 'raises':
                 self.info[key] = [RaiseDocstring(**raise_dict) for raise_dict in val]
+            elif key in ['extended', 'notes', 'references', 'examples']:
+                if isinstance(val, str):
+                    self.info[key] = [val]
+                else:
+                    self.info[key] = val
             else:
                 self.info[key] = val
 
@@ -127,18 +133,29 @@ class Docstring:
 
         # Sections that contains list/tuple of ParamDocstring, MethodDocstring or RaiseDocstring
         # make a list just in case dictionaries stop being ordered
-        sections = ['parameters', 'other parameters', 'returns', 'yields', 'raises']
+        sections = ['parameters', 'other parameters', 'returns', 'yields', 'raises', 'see also']
         headers = {'parameters': '\n\nParameters\n----------',
                    'other parameters': '\n\nOther Parameters\n----------------',
                    'attributes': '\n\nAttributes\n----------',
                    'returns': '\n\nReturns\n-------',
                    'yields': '\n\nYields\n------',
-                   'raises': '\n\nRaises\n------'}
+                   'raises': '\n\nRaises\n------',
+                   'see also': '\n\nSee Also\n--------'}
         for section in sections:
             output += wrapper.fill(headers[section])
             for data in self.info[section]:
                 output += '\n{0}'.format(data.make_numpy(line_length=line_length,
                                                          indent_level=indent_level+1))
+
+        # Sections that contains list of strings
+        sections = ['notes', 'references', 'examples']
+        headers = {'notes': '\n\nNotes\n-----',
+                   'references': '\n\nReferences\n----------',
+                   'examples': '\n\nExamples\n--------'}
+        for section in sections:
+            output += wrapper.fill(headers[section])
+            for paragraph in self.info[section]:
+                output += '\n\n{0}'.format(wrapper.fill(paragraph))
 
         output += '\n"""'
         return output
