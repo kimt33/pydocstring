@@ -100,10 +100,10 @@ class Docstring:
             Number of indents (4 spaces) that are needed for the docstring
         """
         avail_width = line_length - 4 * indent_level
-        tabs = '{0}'.format(4 * indent_level * ' ')
+        tab = '{0}'.format(4 * indent_level * ' ')
         wrapper = textwrap.TextWrapper(width=avail_width, expand_tabs=True, tabsize=4,
                                        replace_whitespace=False, drop_whitespace=True,
-                                       initial_indent=tabs, subsequent_indent=tabs,
+                                       initial_indent=tab, subsequent_indent=tab,
                                        break_long_words=False)
 
         output = '"""'
@@ -185,7 +185,66 @@ class ParamDocstring:
     make_numpy()
         Return corresponding numpy docstring
     """
-    pass
+    def __init__(self, name, types=None, docs=None):
+        """Initialize ParamDocstring.
+
+        Parameters
+        ----------
+        name : str
+            Name of the parameter.
+        types : {tuple/list of str, str}
+            Allowed types of the parameter
+        docs : tuple/list of str
+            Each point of documentation of the parameter.
+        """
+        self.name = name
+        if isinstance(types, str):
+            self.types = [types]
+        else:
+            self.types = types
+        if isinstance(docs, str):
+            self.docs = [docs]
+        else:
+            self.docs = docs
+
+    def make_numpy(self, line_length=100, indent_level=0):
+        """Returns the numpy docstring that corresponds to the Docstring instance.
+
+        Parameters
+        ----------
+        line_length : int
+            Maximum number of characters allowed in each width
+        indent_level : int
+            Number of indents (4 spaces) that are needed for the docstring
+        """
+        avail_width = line_length - 4 * indent_level
+        tab = '{0}'.format(4 * indent_level * ' ')
+        wrapper_kwargs = {'width': avail_width, 'expand_tabs': True, 'tabsize': 4,
+                          'replace_whitespace': False, 'drop_whitespace': True,
+                          'break_long_words': False}
+
+        output = ''
+        # first line
+        # NOTE: add subsequent indent just in case the types are long enough to wrap
+        if len(self.types) <= 1:
+            output += textwrap.fill('{0} : {1}'.format(self.name, self.types[0]),
+                                    initial_indent=tab,
+                                    subsequent_indent=tab + ' '*(len(self.name)+3),
+                                    **wrapper_kwargs)
+        else:
+            output += textwrap.fill('{0} : {1}{2}{3}'.format(self.name, '{', ', '.join(self.types),
+                                                             '}'),
+                                    initial_indent=tab,
+                                    subsequent_indent=tab + ' '*(len(self.name)+4),
+                                    **wrapper_kwargs)
+        # subsequent lines
+        for description in self.docs:
+            output += '\n{0}'.format(textwrap.fill(description,
+                                                   initial_indent=tab + 4*' ',
+                                                   subsequent_indent=tab + 4*' ',
+                                                   **wrapper_kwargs))
+
+        return output
 
 
 class MethodDocstring:
