@@ -2,6 +2,8 @@ import textwrap
 
 
 # FIXME: maybe use attributes to store header/section contents instead of a dictionary?
+# FIXME: add tests
+# TODO: math equations is a bit of a headache, especially because of the backslashes
 class Docstring:
     """Class for storing docstring information.
 
@@ -76,7 +78,7 @@ class Docstring:
                 for info_dict in val:
                     try:
                         data.append(ParamDocstring(**info_dict))
-                    except KeyError:
+                    except TypeError:
                         data.append(MethodDocstring(**info_dict))
                 self.info[key] = data
             elif key == 'raises':
@@ -94,7 +96,8 @@ class Docstring:
                            'references', 'examples']:
                 print('WARNING: keyword, {0}, is not available in the list.'.format(key))
 
-    def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
+    # FIXME: all keywords that are not in numpy's doc sections will not work
+    def make_numpy(self, line_length=100, indent_level=0, tab_width=4, is_raw=False):
         """Returns the numpy docstring that corresponds to the Docstring instance.
 
         Parameters
@@ -105,6 +108,10 @@ class Docstring:
             Number of indents (tabs) that are needed for the docstring
         tab_width : int
             Number of spaces that corresponds to a tab
+        is_raw : bool
+            True if the generated numpy documentation string is a raw string. Docstring should be
+            raw when backslash is used (e.g. math equations).
+            Default is False.
         """
         avail_width = line_length - tab_width * indent_level
         tab = '{0}'.format(tab_width * indent_level * ' ')
@@ -113,10 +120,12 @@ class Docstring:
                                        initial_indent=tab, subsequent_indent=tab,
                                        break_long_words=False)
 
-        output = '"""'
+        output = wrapper.fill('{0}{1}'.format('r' if is_raw else '', '"""'))
         # summary
         # FIXME: what if summary is not given?
-        if len(self.info['summary']) < avail_width - (6 if len(self.info) == 1 else 3):
+        if len(self.info['summary']) < (avail_width
+                                        - (6 if len(self.info) == 1 else 3)
+                                        - (1 if is_raw else 0)):
             output += '{0}'.format(self.info['summary'])
         elif len(self.info['summary']) < avail_width:
             output += '\n{0}'.format(wrapper.fill(self.info['summary']))
@@ -133,16 +142,21 @@ class Docstring:
 
         # Sections that contains list/tuple of ParamDocstring, MethodDocstring or RaiseDocstring
         # make a list just in case dictionaries stop being ordered
-        sections = ['parameters', 'other parameters', 'returns', 'yields', 'raises', 'see also']
-        headers = {'parameters': '\n\nParameters\n----------',
-                   'other parameters': '\n\nOther Parameters\n----------------',
-                   'attributes': '\n\nAttributes\n----------',
-                   'returns': '\n\nReturns\n-------',
-                   'yields': '\n\nYields\n------',
-                   'raises': '\n\nRaises\n------',
-                   'see also': '\n\nSee Also\n--------'}
+        sections = ['parameters', 'other parameters', 'attributes', 'methods', 'returns', 'yields',
+                    'raises', 'see also']
+        headers = {'parameters': 'Parameters',
+                   'other parameters': 'Other Parameters',
+                   'attributes': 'Attributes',
+                   'methods': 'Methods',
+                   'returns': 'Returns',
+                   'yields': 'Yields',
+                   'raises': 'Raises',
+                   'see also': 'See Also'}
         for section in sections:
-            output += wrapper.fill(headers[section])
+            if section not in self.info:
+                continue
+            output += '\n\n{0}\n{1}'.format(wrapper.fill(headers[section]),
+                                            wrapper.fill('-'*len(headers[section])))
             for data in self.info[section]:
                 output += '\n{0}'.format(data.make_numpy(line_length=line_length,
                                                          indent_level=indent_level+1,
@@ -150,11 +164,14 @@ class Docstring:
 
         # Sections that contains list of strings
         sections = ['notes', 'references', 'examples']
-        headers = {'notes': '\n\nNotes\n-----',
-                   'references': '\n\nReferences\n----------',
-                   'examples': '\n\nExamples\n--------'}
+        headers = {'notes': 'Notes',
+                   'references': 'References',
+                   'examples': 'Examples'}
         for section in sections:
-            output += wrapper.fill(headers[section])
+            if section not in self.info:
+                continue
+            output += '\n\n{0}\n{1}'.format(wrapper.fill(headers[section]),
+                                            wrapper.fill('-'*len(headers[section])))
             for i, paragraph in enumerate(self.info[section]):
                 if section == 'references':
                     wrapper.subsequent_indent = tab + 3*' '
@@ -165,7 +182,7 @@ class Docstring:
                 else:
                     output += '{0}\n{1}'.format('\n' if i > 0 else '', wrapper.fill(paragraph))
 
-        output += '\n"""'
+        output += '\n{0}'.format(wrapper.fill('"""'))
         return output
 
 
@@ -202,12 +219,19 @@ class ParamDocstring:
             Allowed types of the parameter
         docs : tuple/list of str
             Each point of documentation of the parameter.
+
+        Raises
+        ------
+        TypeError
+            If types of the parameter is not a string or a list/tuple of strings
         """
         self.name = name
         if isinstance(types, str):
             self.types = [types]
-        else:
+        elif isinstance(types, (list, tuple)) and all(isinstance(i, str) for i in types):
             self.types = types
+        else:
+            raise TypeError('Types allowed by the parameter must be given as a string.')
         if isinstance(docs, str):
             self.docs = [docs]
         else:
@@ -320,7 +344,7 @@ class MethodDocstring:
         # first line
         # NOTE: add subsequent indent just in case the types are long enough to wrap
         output += textwrap.fill('{0}{1}'.format(self.name, self.signature),
-                                initial_indent=tab, subsequent_indent=tab + len(self.name) + 1,
+                                initial_indent=tab, subsequent_indent=tab + ' '*(len(self.name)+1),
                                 **wrapper_kwargs)
         # subsequent lines
         for description in self.docs:
