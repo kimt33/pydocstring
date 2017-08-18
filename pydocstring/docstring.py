@@ -316,7 +316,8 @@ class MethodDocstring:
         # first line
         # NOTE: add subsequent indent just in case the types are long enough to wrap
         output += textwrap.fill('{0}{1}'.format(self.name, self.signature),
-                                initial_indent=tab, subsequent_indent=tab, **wrapper_kwargs)
+                                initial_indent=tab, subsequent_indent=tab + len(self.name) + 1,
+                                **wrapper_kwargs)
         # subsequent lines
         for description in self.docs:
             output += '\n{0}'.format(textwrap.fill(description,
@@ -328,24 +329,68 @@ class MethodDocstring:
 
 
 class RaiseDocstring:
-    """Class for storing docstring information on raises.
+    """Class for storing docstring information on the error raised.
 
     Attributes
     ----------
     name : str
-        Name of the method.
-    call_signature : str
-        Call signature of the method.
+        Name of the error raised.
     docs : list of str
-        Documentations for the method.
+        Documentations for the error raised.
 
     Methods
     -------
-    __init__(name, call_signature, docs=None)
+    __init__(name, docs=None)
         Initialize.
     make_google()
         Return correspond google docstring
     make_numpy()
         Return corresponding numpy docstring
     """
-    pass
+    def __init__(self, name, docs=None):
+        """Initialize ParamDocstring.
+
+        Parameters
+        ----------
+        name : str
+            Name of the method.
+        docs : tuple/list of str
+            Each point of documentation of the method.
+        """
+        self.name = name
+        if isinstance(docs, str):
+            self.docs = [docs]
+        else:
+            self.docs = docs
+
+    def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
+        """Returns the numpy docstring that corresponds to the RaiseDocstring instance.
+
+        Parameters
+        ----------
+        line_length : int
+            Maximum number of characters allowed in each width
+        indent_level : int
+            Number of indents (tabs) that are needed for the docstring
+        tab_width : int
+            Number of spaces that corresponds to a tab
+        """
+        avail_width = line_length - tab_width * indent_level
+        tab = '{0}'.format(tab_width * indent_level * ' ')
+        wrapper_kwargs = {'width': avail_width, 'expand_tabs': True, 'tabsize': tab_width,
+                          'replace_whitespace': False, 'drop_whitespace': True,
+                          'break_long_words': False}
+
+        output = ''
+        # first line
+        # NOTE: add subsequent indent just in case the types are long enough to wrap
+        output += textwrap.fill('{0}'.format(self.name),
+                                initial_indent=tab, subsequent_indent=tab, **wrapper_kwargs)
+        # subsequent lines
+        for description in self.docs:
+            output += '\n{0}'.format(textwrap.fill(description,
+                                                   initial_indent=tab + tab_width*' ',
+                                                   subsequent_indent=tab + tab_width*' ',
+                                                   **wrapper_kwargs))
+
+        return output
