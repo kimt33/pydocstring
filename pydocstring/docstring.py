@@ -89,7 +89,7 @@ class Docstring:
                            'references', 'examples']:
                 print('WARNING: keyword, {0}, is not available in the list.'.format(key))
 
-    def make_numpy(self, line_length=100, indent_level=0):
+    def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
         """Returns the numpy docstring that corresponds to the Docstring instance.
 
         Parameters
@@ -97,11 +97,13 @@ class Docstring:
         line_length : int
             Maximum number of characters allowed in each width
         indent_level : int
-            Number of indents (4 spaces) that are needed for the docstring
+            Number of indents (tabs) that are needed for the docstring
+        tab_width : int
+            Number of spaces that corresponds to a tab
         """
-        avail_width = line_length - 4 * indent_level
-        tab = '{0}'.format(4 * indent_level * ' ')
-        wrapper = textwrap.TextWrapper(width=avail_width, expand_tabs=True, tabsize=4,
+        avail_width = line_length - tab_width * indent_level
+        tab = '{0}'.format(tab_width * indent_level * ' ')
+        wrapper = textwrap.TextWrapper(width=avail_width, expand_tabs=True, tabsize=tab_width,
                                        replace_whitespace=False, drop_whitespace=True,
                                        initial_indent=tab, subsequent_indent=tab,
                                        break_long_words=False)
@@ -207,7 +209,7 @@ class ParamDocstring:
         else:
             self.docs = docs
 
-    def make_numpy(self, line_length=100, indent_level=0):
+    def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
         """Returns the numpy docstring that corresponds to the Docstring instance.
 
         Parameters
@@ -215,11 +217,13 @@ class ParamDocstring:
         line_length : int
             Maximum number of characters allowed in each width
         indent_level : int
-            Number of indents (4 spaces) that are needed for the docstring
+            Number of indents (tabs) that are needed for the docstring
+        tab_width : int
+            Number of spaces that corresponds to a tab
         """
-        avail_width = line_length - 4 * indent_level
-        tab = '{0}'.format(4 * indent_level * ' ')
-        wrapper_kwargs = {'width': avail_width, 'expand_tabs': True, 'tabsize': 4,
+        avail_width = line_length - tab_width * indent_level
+        tab = '{0}'.format(tab_width * indent_level * ' ')
+        wrapper_kwargs = {'width': avail_width, 'expand_tabs': True, 'tabsize': tab_width,
                           'replace_whitespace': False, 'drop_whitespace': True,
                           'break_long_words': False}
 
@@ -240,8 +244,8 @@ class ParamDocstring:
         # subsequent lines
         for description in self.docs:
             output += '\n{0}'.format(textwrap.fill(description,
-                                                   initial_indent=tab + 4*' ',
-                                                   subsequent_indent=tab + 4*' ',
+                                                   initial_indent=tab + tab_width*' ',
+                                                   subsequent_indent=tab + tab_width*' ',
                                                    **wrapper_kwargs))
 
         return output
