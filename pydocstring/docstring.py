@@ -1,3 +1,6 @@
+import textwrap
+
+
 class Docstring:
     """Class for storing docstring information.
 
@@ -45,9 +48,49 @@ class Docstring:
                            'docs':['Dictionary of the headers to contents under header.']}}}
     info = {'Attributes': {'info': <ParamDocstring object>}}
     """
-    pass
+    def __init__(self, **headers_contents):
+        """Initializes.
+
+        Parameters
+        ----------
+        headers_contents : dict from str to str/dict
+            Section title and the contents of that section
+            For 'extended', list/tuple of string needs to be provided (one for each paragraph).
+            For 'parameters', list of dictionaries needed to be provided for constructing
+            ParamDocstring.
+            For 'methods', list of dictionaries needed to be provided for constructing
+            MethodDocstring.
+            For 'returns' and 'yields', list of dictionaries needed to be provided for constructing
+            ParamDocstring or MethodDocstring.
+        """
+        headers_contents = {key.lower(): val for key, val in headers_contents.items()}
+        # contents
+        self.info = {}
+        for key, val in headers_contents.items():
+            if key == 'parameters':
+                self.info[key] = [ParamDocstring(**param_dict) for param_dict in val]
+            elif key == 'methods':
+                self.info[key] = [MethodDocstring(**method_dict) for method_dict in val]
+            elif key in ['returns', 'yields']:
+                returns = []
+                for info_dict in val:
+                    try:
+                        returns.append(ParamDocstring(**info_dict))
+                    except KeyError:
+                        returns.append(MethodDocstring(**info_dict))
+                self.info[key] = returns
+            elif key in ['raises']:
+                self.info[key] = [RaiseDocstring(**raise_dict) for raise_dict in val]
+            else:
+                self.info[key] = val
+
+            if key not in ['summary', 'extended', 'parameters', 'other parameters', 'attributes',
+                           'methods', 'returns', 'yields', 'raises', 'see also', 'notes',
+                           'references', 'examples']:
+                print('WARNING: keyword, {0}, is not available in the list.'.format(key))
 
 
+# TODO: turn each section into a class
 class ParamDocstring:
     """Class for storing docstring information on parameters.
 
@@ -62,12 +105,12 @@ class ParamDocstring:
 
     Methods
     -------
-    __init__(name, type=None, docs=None)
+    __init__(name, types=None, docs=None)
         Initialize.
-    parse_google(docstring)
-        Return instance of Docstring that corresponds to given google docstring.
-    parse_numpy(docstring)
-        Return instance of Docstring that corresponds to given numpy docstring.
+    make_google()
+        Return correspond google docstring
+    make_numpy()
+        Return corresponding numpy docstring
     """
     pass
 
@@ -88,9 +131,33 @@ class MethodDocstring:
     -------
     __init__(name, call_signature, docs=None)
         Initialize.
-    parse_google(docstring)
-        Return instance of Docstring that corresponds to given google docstring.
-    parse_numpy(docstring)
-        Return instance of Docstring that corresponds to given numpy docstring.
+    make_google()
+        Return correspond google docstring
+    make_numpy()
+        Return corresponding numpy docstring
+    """
+    pass
+
+
+class RaiseDocstring:
+    """Class for storing docstring information on raises.
+
+    Attributes
+    ----------
+    name : str
+        Name of the method.
+    call_signature : str
+        Call signature of the method.
+    docs : list of str
+        Documentations for the method.
+
+    Methods
+    -------
+    __init__(name, call_signature, docs=None)
+        Initialize.
+    make_google()
+        Return correspond google docstring
+    make_numpy()
+        Return corresponding numpy docstring
     """
     pass
