@@ -155,8 +155,15 @@ class Docstring:
                    'examples': '\n\nExamples\n--------'}
         for section in sections:
             output += wrapper.fill(headers[section])
-            for paragraph in self.info[section]:
-                output += '\n\n{0}'.format(wrapper.fill(paragraph))
+            for i, paragraph in enumerate(self.info[section]):
+                if section == 'references':
+                    wrapper.subsequent_indent = tab + 3*' '
+                    wrapper.width -= 3
+                    output += '\n.. {0}'.format(wrapper.fill('[{0}] {1}'.format(i+1, paragraph)))
+                    wrapper.subsequent_indent = tab
+                    wrapper.width += 3
+                else:
+                    output += '{0}\n{1}'.format('\n' if i > 0 else '', wrapper.fill(paragraph))
 
         output += '\n"""'
         return output
