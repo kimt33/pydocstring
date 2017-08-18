@@ -67,18 +67,17 @@ class Docstring:
         # contents
         self.info = {}
         for key, val in headers_contents.items():
-            if key == 'parameters':
-                self.info[key] = [ParamDocstring(**param_dict) for param_dict in val]
-            elif key == 'methods':
-                self.info[key] = [MethodDocstring(**method_dict) for method_dict in val]
-            elif key in ['returns', 'yields']:
-                returns = []
+            # FIXME: parameters may have MethodDocstring (which I think is okay when function is a
+            #        parameter). methods may have ParamDocstring (which I think may be a problem).
+            if key in ['parameters', 'other parameters', 'attributes', 'methods', 'returns',
+                       'yields']:
+                data = []
                 for info_dict in val:
                     try:
-                        returns.append(ParamDocstring(**info_dict))
+                        data.append(ParamDocstring(**info_dict))
                     except KeyError:
-                        returns.append(MethodDocstring(**info_dict))
-                self.info[key] = returns
+                        data.append(MethodDocstring(**info_dict))
+                self.info[key] = data
             elif key in ['raises']:
                 self.info[key] = [RaiseDocstring(**raise_dict) for raise_dict in val]
             else:
@@ -126,40 +125,20 @@ class Docstring:
             for paragraph in self.info['extended']:
                 output += '\n\n{0}'.format(wrapper.fill(paragraph))
 
-        # parameters
-        if 'parameters' in self.info:
-            output += wrapper.fill('\n\nParameters\n----------')
-            for param in self.info['parameters']:
-                output += '\n{0}'.format(param.make_numpy(line_length=line_length,
-                                                          indent_level=indent_level+1))
-
-        # other parameters
-        if 'other parameters' in self.info:
-            output += wrapper.fill('\n\nOther Parameters\n----------------')
-            for param in self.info['other parameters']:
-                output += '\n{0}'.format(param.make_numpy(line_length=line_length,
-                                                          indent_level=indent_level+1))
-
-        # returns
-        if 'returns' in self.info:
-            output += wrapper.fill('\n\nReturns\n-------')
-            for return_info in self.info['returns']:
-                output += '\n{0}'.format(return_info.make_numpy(line_length=line_length,
-                                                                indent_level=indent_level+1))
-
-        # yields
-        if 'yields' in self.info:
-            output += wrapper.fill('\n\nYields\n------')
-            for yield_info in self.info['yields']:
-                output += '\n{0}'.format(yield_info.make_numpy(line_length=line_length,
-                                                               indent_level=indent_level+1))
-
-        # raises
-        if 'raises' in self.info:
-            output += wrapper.fill('\n\nRaises\n------')
-            for raise_info in self.info['raises']:
-                output += '\n{0}'.format(raise_info.make_numpy(line_length=line_length,
-                                                               indent_level=indent_level+1))
+        # Sections that contains list/tuple of ParamDocstring, MethodDocstring or RaiseDocstring
+        # make a list just in case dictionaries stop being ordered
+        sections = ['parameters', 'other parameters', 'returns', 'yields', 'raises']
+        headers = {'parameters': '\n\nParameters\n----------',
+                   'other parameters': '\n\nOther Parameters\n----------------',
+                   'attributes': '\n\nAttributes\n----------',
+                   'returns': '\n\nReturns\n-------',
+                   'yields': '\n\nYields\n------',
+                   'raises': '\n\nRaises\n------'}
+        for section in sections:
+            output += wrapper.fill(headers[section])
+            for data in self.info[section]:
+                output += '\n{0}'.format(data.make_numpy(line_length=line_length,
+                                                         indent_level=indent_level+1))
 
         output += '\n"""'
         return output
