@@ -159,7 +159,7 @@ class Docstring:
                                             wrapper.fill('-'*len(headers[section])))
             for data in self.info[section]:
                 output += '\n{0}'.format(data.make_numpy(line_length=line_length,
-                                                         indent_level=indent_level+1,
+                                                         indent_level=indent_level,
                                                          tab_width=tab_width))
 
         # Sections that contains list of strings
@@ -208,7 +208,7 @@ class ParamDocstring:
     make_numpy(self, line_length=100, indent_level=0, tab_width=4)
         Return corresponding numpy docstring
     """
-    def __init__(self, name, types=None, docs=None):
+    def __init__(self, name, types, docs=None):
         """Initialize ParamDocstring.
 
         Parameters
@@ -258,7 +258,7 @@ class ParamDocstring:
         output = ''
         # first line
         # NOTE: add subsequent indent just in case the types are long enough to wrap
-        if len(self.types) <= 1:
+        if len(self.types) == 1:
             output += textwrap.fill('{0} : {1}'.format(self.name, self.types[0]),
                                     initial_indent=tab,
                                     subsequent_indent=tab + ' '*(len(self.name)+3),
