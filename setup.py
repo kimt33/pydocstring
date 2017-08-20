@@ -7,7 +7,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-setup(name='pydocstyle',
+setup(name='pydocstring',
       version='0.0.1',
       description='Collection of tools for manipulating Python docstrings.',
       long_description=long_description,
