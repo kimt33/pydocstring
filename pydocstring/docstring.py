@@ -51,6 +51,8 @@ class Docstring:
                            'docs':['Dictionary of the headers to contents under header.']}}}
     info = {'Attributes': {'info': <ParamDocstring object>}}
     """
+    # FIXME: probably hardcodes the numpy docstring style
+    # FIXME: multi-word headers are troublesome
     def __init__(self, **headers_contents):
         """Initializes.
 
@@ -65,36 +67,58 @@ class Docstring:
             MethodDocstring.
             For 'returns' and 'yields', list of dictionaries needed to be provided for constructing
             ParamDocstring or MethodDocstring.
+
+        Raises
+        ------
+        ValueError
+            If sections 'Parameters', 'Other Parameters', 'Attributes', 'Methods', 'Returns',
+            'Yields', 'Raises', and 'See Also' have items that are not instances of ParamDocstring,
+            MethodDocstring, RaiseDocstring or parameters to the initializer of these classes.
         """
         headers_contents = {key.lower(): val for key, val in headers_contents.items()}
-        # contents
         self.info = {}
-        for key, val in headers_contents.items():
-            # FIXME: parameters may have MethodDocstring (which I think is okay when function is a
-            #        parameter). methods may have ParamDocstring (which I think may be a problem).
+        for key, contents in headers_contents.items():
             if key in ['parameters', 'other parameters', 'attributes', 'methods', 'returns',
-                       'yields', 'see also']:
+                       'yields', 'raises', 'see also']:
                 data = []
-                for info_dict in val:
+                for item in contents:
                     try:
-                        data.append(ParamDocstring(**info_dict))
+                        data.append(ParamDocstring(**item))
+                        continue
                     except TypeError:
-                        data.append(MethodDocstring(**info_dict))
+                        pass
+
+                    try:
+                        data.append(MethodDocstring(**item))
+                    except TypeError:
+                        pass
+
+                    try:
+                        data.append(RaiseDocstring(**item))
+                    except TypeError:
+                        pass
+
+                    if isinstance(contents, (ParamDocstring, MethodDocstring, RaiseDocstring)):
+                        data.append(item)
+                    else:
+                        raise ValueError(
+                            'Items of section, {0}, must be an instance of `ParamDocstring` or '
+                            '`MethodDocstring`, `RaiseDocstring` or be the parameters to the '
+                            'initializer of these clases.'.format(key)
+                        )
                 self.info[key] = data
-            elif key == 'raises':
-                self.info[key] = [RaiseDocstring(**raise_dict) for raise_dict in val]
             elif key in ['extended', 'notes', 'references', 'examples']:
-                if isinstance(val, str):
-                    self.info[key] = [val]
+                if isinstance(contents, str):
+                    self.info[key] = [contents]
                 else:
-                    self.info[key] = val
+                    self.info[key] = contents
             else:
-                self.info[key] = val
+                self.info[key] = contents
 
             if key not in ['summary', 'extended', 'parameters', 'other parameters', 'attributes',
                            'methods', 'returns', 'yields', 'raises', 'see also', 'notes',
                            'references', 'examples']:
-                print('WARNING: keyword, {0}, is not available in the list.'.format(key))
+                print('WARNING: keyword, {0}, is not compatible with the numpy write.'.format(key))
 
     # FIXME: all keywords that are not in numpy's doc sections will not work
     def make_numpy(self, line_length=100, indent_level=0, tab_width=4, is_raw=False):
