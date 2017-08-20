@@ -221,8 +221,9 @@ class Docstring:
 class TabbedInfo:
     """Class for storing docstring information where subsequent lines are tabbed.
 
-    If the information is a method, then all of `name`, `signature`, `types` and `descs` can be
-    given. The `types` would correspond to the types of the returned value.
+    If the information is a method, then all of `name`, `signature`, and `descs` can be
+    given. The `types` can also be given to show the types of the returned value. However, note that
+    NumPy docstring format does not support this documentation format.
     If the information is a parameter, then `name`, `type` and `descs` can be given. The `types`
     would correspond to the allowed types of the parameter.
     If the information is a raised error, then `name` and `descs` can be given.
@@ -320,30 +321,34 @@ class TabbedInfo:
         tab_width : int
             Number of spaces that corresponds to a tab
         """
-        avail_width = line_length - tab_width * indent_level
         tab = '{0}'.format(tab_width * indent_level * ' ')
-        wrapper_kwargs = {'width': avail_width, 'expand_tabs': True, 'tabsize': tab_width,
+        wrapper_kwargs = {'width': line_length, 'expand_tabs': True, 'tabsize': tab_width,
                           'replace_whitespace': False, 'drop_whitespace': True,
                           'break_long_words': False}
 
-        output = ''
         # first line
         # NOTE: add subsequent indent just in case signature and types are long enough to wrap
-        signature = '{0}'.format(self.signature if self.signature != '' else '')
-        output += textwrap.fill('{0}{1}'.format(self.name, signature),
-                                initial_indent=tab, subsequent_indent=tab + ' '*(len(self.name)+1),
-                                **wrapper_kwargs)
-        if len(self.types) == 1:
-            output += textwrap.fill('{0} : {1}'.format(self.name, self.types[0]),
-                                    initial_indent=tab,
-                                    subsequent_indent=tab + ' '*(len(output)+3),
-                                    **wrapper_kwargs)
+        if self.signature != '' and len(self.types) > 0:
+            raise NotImplementedError('NumPy documentation format does not support methods with '
+                                      'the type of the returned values.')
+
+        if len(self.types) == 0:
+            signature = '{0}'.format(self.signature if self.signature != '' else '')
+            output = textwrap.fill('{0}{1}'.format(self.name, signature),
+                                   initial_indent=tab,
+                                   subsequent_indent=tab + ' '*(len(self.name)+1),
+                                   **wrapper_kwargs)
+        elif len(self.types) == 1:
+            output = textwrap.fill('{0} : {1}'.format(self.name, self.types[0]),
+                                   initial_indent=tab,
+                                   subsequent_indent=tab + ' '*(len(self.name)+3),
+                                   **wrapper_kwargs)
         elif len(self.types) > 1:
-            output += textwrap.fill('{0} : {1}{2}{3}'.format(self.name,
-                                                             '{', ', '.join(self.types), '}'),
-                                    initial_indent=tab,
-                                    subsequent_indent=tab + ' '*(len(output)+4),
-                                    **wrapper_kwargs)
+            output = textwrap.fill('{0} : {1}{2}{3}'.format(self.name,
+                                                            '{', ', '.join(self.types), '}'),
+                                   initial_indent=tab,
+                                   subsequent_indent=tab + ' '*(len(self.name)+4),
+                                   **wrapper_kwargs)
         # subsequent lines
         for description in self.descs:
             output += '\n{0}'.format(textwrap.fill(description,
