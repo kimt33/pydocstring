@@ -144,21 +144,24 @@ class Docstring:
             raw when backslash is used (e.g. math equations).
             Default is False.
         """
-        avail_width = line_length - tab_width * indent_level
         tab = '{0}'.format(tab_width * indent_level * ' ')
-        wrapper = textwrap.TextWrapper(width=avail_width, expand_tabs=True, tabsize=tab_width,
+        wrapper = textwrap.TextWrapper(width=line_length, expand_tabs=True, tabsize=tab_width,
                                        replace_whitespace=False, drop_whitespace=True,
                                        initial_indent=tab, subsequent_indent=tab,
                                        break_long_words=False)
 
         output = wrapper.fill('{0}{1}'.format('r' if is_raw else '', '"""'))
         # summary
-        # FIXME: what if summary is not given?
-        if len(self.info['summary']) < (avail_width
-                                        - (6 if len(self.info) == 1 else 3)
-                                        - (1 if is_raw else 0)):
+        if 'summary' not in self.info:
+            pass
+            # NOTE: is this too harsh?
+            # raise NotImplementedError('Summary needs to be provided to construct the numpy'
+            #                           ' documentation.')
+        elif len(self.info['summary']) < (line_length
+                                          - (6 if len(self.info) == 1 else 3)
+                                          - (1 if is_raw else 0)):
             output += '{0}'.format(self.info['summary'])
-        elif len(self.info['summary']) < avail_width:
+        elif len(self.info['summary']) < line_length:
             output += '\n{0}'.format(wrapper.fill(self.info['summary']))
         else:
             print('WARNING: summary is too long for the given indent level and line length.')

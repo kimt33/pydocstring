@@ -169,3 +169,127 @@ def test_tabbedinfo_make_numpy():
                                 descs='Maximum number of characters allowed in each width')
     assert_raises(NotImplementedError, info.make_numpy, line_length=100, indent_level=0,
                   tab_width=4)
+
+
+def test_docstring_make_numpy():
+    """Tests pydocstring.docstring.Docstring.make_numpy."""
+    # summary
+    test = docstring.Docstring(
+        summary='something happening in this thing, it really happens oh yes it does the thing',
+    )
+    assert (test.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
+            '"""something happening in this thing, it really happens oh yes it does the thing\n"""')
+
+    # extended
+    test = docstring.Docstring(extended='dasfsdf')
+    # assert_raises(NotImplementedError, test.make_numpy, line_length=100, indent_level=0,
+    #               tab_width=4)
+    assert (test.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
+            '"""\n\ndasfsdf\n"""')
+
+    # parameters, attributes, methods, returns, yields, raises, other parameters, see also
+    for header in ['parameters', 'attributes', 'methods', 'returns', 'yields', 'raises',
+                   'other parameters', 'see also']:
+        # with types and description
+        test = docstring.Docstring(**{header: {'name': 'something',
+                                               'types': ['sometype1', 'sometype2'],
+                                               'descs': ('something happening in this thing, it '
+                                                         'really happens oh yes it does '
+                                                         'the thing')}})
+        assert (test.make_numpy(line_length=70, indent_level=0, tab_width=4) ==
+                '"""\n\n'
+                '{0}\n'
+                '{1}\n'
+                'something : {2}\n'
+                '    something happening in this thing, it really happens oh yes it\n'
+                '    does the thing\n"""'.format(header.title(), '-' * len(header),
+                                                 '{sometype1, sometype2}'))
+        # with signature and description
+        test = docstring.Docstring(**{header: {'name': 'something',
+                                               'signature': 'a, b, c',
+                                               'descs': ('something happening in this thing, it '
+                                                         'really happens oh yes it does '
+                                                         'the thing')}})
+        assert (test.make_numpy(line_length=70, indent_level=0, tab_width=4) ==
+                '"""\n\n'
+                '{0}\n'
+                '{1}\n'
+                'something(a, b, c)\n'
+                '    something happening in this thing, it really happens oh yes it\n'
+                '    does the thing\n"""'.format(header.title(), '-' * len(header),))
+        # with description
+        test = docstring.Docstring(**{header: {'name': 'something',
+                                               'descs': ('something happening in this thing, it '
+                                                         'really happens oh yes it does '
+                                                         'the thing')}})
+        assert (test.make_numpy(line_length=70, indent_level=0, tab_width=4) ==
+                '"""\n\n'
+                '{0}\n'
+                '{1}\n'
+                'something\n'
+                '    something happening in this thing, it really happens oh yes it\n'
+                '    does the thing\n"""'.format(header.title(), '-' * len(header),))
+
+    # example function
+    test = docstring.Docstring(
+        summary='Returns something',
+        extended='More description',
+        parameters={'name': 'x',
+                    'types': ['sometype1', 'sometype2'],
+                    'descs': 'parameter of the function'},
+        returns={'name': 'something',
+                 'types': 'str',
+                 'descs': 'value of the function at x'},
+        raises={'name': 'NotImplementedError'},
+        notes=['This function actually does nothing']
+    )
+    assert (test.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
+            '"""Returns something\n\n'
+            'More description\n\n'
+            'Parameters\n'
+            '----------\n'
+            'x : {sometype1, sometype2}\n'
+            '    parameter of the function\n\n'
+            'Returns\n'
+            '-------\n'
+            'something : str\n'
+            '    value of the function at x\n\n'
+            'Raises\n'
+            '------\n'
+            'NotImplementedError\n\n'
+            'Notes\n'
+            '-----\n'
+            'This function actually does nothing\n'
+            '"""')
+
+    # example class
+    test = docstring.Docstring(
+        summary='Class for doing something.',
+        extended='More description',
+        attributes={'name': 'x',
+                    'types': ['sometype1', 'sometype2'],
+                    'descs': 'some attribute'},
+        methods={'name': 'f',
+                 'signature': '(x)',
+                 'descs': 'Does nothing.'},
+        notes=['This class actually does nothing'],
+        references='some reference'
+    )
+    assert (test.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
+            '"""Class for doing something.\n\n'
+            'More description\n\n'
+            'Attributes\n'
+            '----------\n'
+            'x : {sometype1, sometype2}\n'
+            '    some attribute\n\n'
+            'Methods\n'
+            '-------\n'
+            'f(x)\n'
+            '    Does nothing.\n\n'
+            'Notes\n'
+            '-----\n'
+            'This class actually does nothing\n\n'
+            'References\n'
+            '----------\n'
+            '.. [1] some reference\n'
+            '"""')
