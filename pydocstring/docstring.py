@@ -48,7 +48,8 @@ class Docstring:
     For example, this docstring should be equivalent to
 
     info = {'Attributes': {'info': {'type': ['dict'],
-                           'docs':['Dictionary of the headers to contents under header.']}}}
+                                    'descs':['Dictionary of the headers to contents under header.']}
+                           }}
     info = {'Attributes': {'info': <ParamInfo object>}}
     """
     # FIXME: probably hardcodes the numpy docstring style
@@ -80,11 +81,12 @@ class Docstring:
 
         Raises
         ------
-        ValueError
+        TypeError
             If sections 'Parameters', 'Other Parameters', 'Attributes', 'Methods', 'Returns',
             'Yields', 'Raises', and 'See Also' have items that are not instances of ParamInfo,
             MethodInfo, TabbedInfo or parameters to the initializer of these classes.
-            If the summary is not given as a string.
+            If the summary or other sections (i.e. not listed above) has contents that are not
+            string.
         """
         self.info = {}
 
@@ -119,7 +121,7 @@ class Docstring:
                     except TypeError:
                         pass
 
-                    raise ValueError(
+                    raise TypeError(
                         'Items of section, {0}, must be an instance of `ParamInfo` or '
                         '`MethodInfo`, `TabbedInfo` or be the parameters to the '
                         'initializer of these clases.'.format(key)
@@ -129,18 +131,18 @@ class Docstring:
                 if isinstance(contents, str):
                     self.info[key] = [contents]
                 else:
-                    self.info[key] = contents
-            else:
-                if key == 'summary' and not isinstance(contents, str):
-                    raise ValueError('Contents of summary must be a string.')
+                    self.info[key] = list(contents)
+            elif isinstance(contents, str):
                 self.info[key] = contents
+            else:
+                raise TypeError('The contents of the section, {0}, must be a string'.format(key))
 
             if key not in ['summary', 'extended', 'parameters', 'other parameters', 'attributes',
                            'methods', 'returns', 'yields', 'raises', 'see also', 'notes',
                            'references', 'examples']:
                 print('WARNING: keyword, {0}, is not compatible with the numpy write.'.format(key))
 
-    # FIXME: all keywords that are not in numpy's doc sections will not work
+    # FIXME: all keywords that are not in numpy's doc sections will not be added
     def make_numpy(self, line_length=100, indent_level=0, tab_width=4, is_raw=False):
         """Returns the numpy docstring that corresponds to the Docstring instance.
 
@@ -239,33 +241,37 @@ class TabbedInfo:
     ----------
     name : str
         Name of the information.
-    docs : list of str
+    descs : list of str
         Description of the information.
 
     Methods
     -------
-    __init__(name, docs=None)
+    __init__(name, descs=None)
         Initialize.
     make_google()
         Return correspond google docstring
     make_numpy()
         Return corresponding numpy docstring
     """
-    def __init__(self, name, docs=None):
+    def __init__(self, name, descs=None):
         """Initialize ParamInfo.
 
         Parameters
         ----------
         name : str
             Name of the method.
-        docs : tuple/list of str
+        descs : tuple/list of str
             Each point of documentation of the method.
         """
         self.name = name
-        if isinstance(docs, str):
-            self.docs = [docs]
+        if descs is None:
+            self.descs = []
+        elif isinstance(descs, str):
+            self.descs = [descs]
+        elif isinstance(descs, (list, tuple)):
+            self.descs = list(descs)
         else:
-            self.docs = docs
+            raise TypeError('descs must be a string or a list/tuple of strings')
 
     def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
         """Returns the numpy docstring that corresponds to the TabbedInfo instance.
@@ -291,7 +297,7 @@ class TabbedInfo:
         output += textwrap.fill('{0}'.format(self.name),
                                 initial_indent=tab, subsequent_indent=tab, **wrapper_kwargs)
         # subsequent lines
-        for description in self.docs:
+        for description in self.descs:
             output += '\n{0}'.format(textwrap.fill(description,
                                                    initial_indent=tab + tab_width*' ',
                                                    subsequent_indent=tab + tab_width*' ',
@@ -309,19 +315,19 @@ class ParamInfo(TabbedInfo):
         Name of the parameter.
     types : list of str
         Type of the parameters allowed.
-    docs : list of str
+    descs : list of str
         Documentations for the parameter.
 
     Methods
     -------
-    __init__(name, types=None, docs=None)
+    __init__(name, types=None, descs=None)
         Initialize.
     make_google()
         Return correspond google docstring
     make_numpy(self, line_length=100, indent_level=0, tab_width=4)
         Return corresponding numpy docstring
     """
-    def __init__(self, name, types, docs=None):
+    def __init__(self, name, types, descs=None):
         """Initialize ParamInfo.
 
         Parameters
@@ -330,7 +336,7 @@ class ParamInfo(TabbedInfo):
             Name of the parameter.
         types : {tuple/list of str, str}
             Allowed types of the parameter
-        docs : tuple/list of str
+        descs : tuple/list of str
             Each point of documentation of the parameter.
 
         Raises
@@ -338,11 +344,11 @@ class ParamInfo(TabbedInfo):
         TypeError
             If types of the parameter is not a string or a list/tuple of strings
         """
-        super().__init__(name, docs)
+        super().__init__(name, descs)
         if isinstance(types, str):
             self.types = [types]
         elif isinstance(types, (list, tuple)) and all(isinstance(i, str) for i in types):
-            self.types = types
+            self.types = list(types)
         else:
             raise TypeError('Types allowed by the parameter must be given as a string.')
 
@@ -380,7 +386,7 @@ class ParamInfo(TabbedInfo):
                                     subsequent_indent=tab + ' '*(len(self.name)+4),
                                     **wrapper_kwargs)
         # subsequent lines
-        for description in self.docs:
+        for description in self.descs:
             output += '\n{0}'.format(textwrap.fill(description,
                                                    initial_indent=tab + tab_width*' ',
                                                    subsequent_indent=tab + tab_width*' ',
@@ -398,19 +404,19 @@ class MethodInfo(TabbedInfo):
         Name of the method.
     signature : str
         Signature of the method.
-    docs : list of str
+    descs : list of str
         Documentations for the method.
 
     Methods
     -------
-    __init__(name, signature, docs=None)
+    __init__(name, signature, descs=None)
         Initialize.
     make_google()
         Return correspond google docstring
     make_numpy(self, line_length=100, indent_level=0, tab_width=4)
         Return corresponding numpy docstring
     """
-    def __init__(self, name, signature, docs=None):
+    def __init__(self, name, signature, descs=None):
         """Initialize ParamInfo.
 
         Parameters
@@ -419,11 +425,19 @@ class MethodInfo(TabbedInfo):
             Name of the method.
         signature : str
             Signature of the method.
-        docs : tuple/list of str
+        descs : tuple/list of str
             Each point of documentation of the method.
+
+        Raises
+        ------
+        TypeError
+            If signatur is not a string.
         """
-        super().__init__(name, docs)
+        super().__init__(name, descs)
         # FIXME: this can be broken with the right parenthesis structure
+        if not isinstance(signature, str):
+            raise TypeError('signature must be a string.')
+        signature = signature.strip()
         if signature[0] != '(' or signature[-1] != ')':
             signature = '({0})'.format(signature)
         self.signature = signature
@@ -454,7 +468,7 @@ class MethodInfo(TabbedInfo):
                                 initial_indent=tab, subsequent_indent=tab + ' '*(len(self.name)+1),
                                 **wrapper_kwargs)
         # subsequent lines
-        for description in self.docs:
+        for description in self.descs:
             output += '\n{0}'.format(textwrap.fill(description,
                                                    initial_indent=tab + tab_width*' ',
                                                    subsequent_indent=tab + tab_width*' ',
