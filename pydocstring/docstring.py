@@ -49,63 +49,81 @@ class Docstring:
 
     info = {'Attributes': {'info': {'type': ['dict'],
                            'docs':['Dictionary of the headers to contents under header.']}}}
-    info = {'Attributes': {'info': <ParamDocstring object>}}
+    info = {'Attributes': {'info': <ParamInfo object>}}
     """
     # FIXME: probably hardcodes the numpy docstring style
     # FIXME: multi-word headers are troublesome
     def __init__(self, **headers_contents):
         """Initializes.
 
+        For 'summary', 'parameters', 'other parameters', 'attributes', 'methods', 'returns',
+        'yields'. 'raises', and 'see also' keywords, the contents are fed into the ParamInfo,
+        MethodInfo or TabbedInfo initializer as keyword arguments.
+
         Parameters
         ----------
-        headers_contents : dict from str to str/dict
+        headers_contents : dict
             Section title and the contents of that section
-            For 'extended', list/tuple of string needs to be provided (one for each paragraph).
-            For 'parameters', list of dictionaries needed to be provided for constructing
-            ParamDocstring.
-            For 'methods', list of dictionaries needed to be provided for constructing
-            MethodDocstring.
-            For 'returns' and 'yields', list of dictionaries needed to be provided for constructing
-            ParamDocstring or MethodDocstring.
+            'summary' : str
+            'extended' : {str, list of str}
+            'parameters' : {None, ParamInfo, MethodInfo, TabbedInfo, dict}
+            'other parameters' : {None, ParamInfo, MethodInfo, TabbedInfo, dict}
+            'attributes' : {None, ParamInfo, MethodInfo, TabbedInfo, dict}
+            'methods' : {None, ParamInfo, MethodInfo, TabbedInfo, dict}
+            'returns' : {None, ParamInfo, MethodInfo, TabbedInfo, dict}
+            'yields' : {None, ParamInfo, MethodInfo, TabbedInfo, dict}
+            'raises' : {None, ParamInfo, MethodInfo, TabbedInfo, dict}
+            'see also' : {None, ParamInfo, MethodInfo, TabbedInfo, dict}
+            'notes' : {str, list of str}
+            'references' : {str, list of str}
+            'examples' : {str, list of str}
 
         Raises
         ------
         ValueError
             If sections 'Parameters', 'Other Parameters', 'Attributes', 'Methods', 'Returns',
-            'Yields', 'Raises', and 'See Also' have items that are not instances of ParamDocstring,
-            MethodDocstring, RaiseDocstring or parameters to the initializer of these classes.
+            'Yields', 'Raises', and 'See Also' have items that are not instances of ParamInfo,
+            MethodInfo, TabbedInfo or parameters to the initializer of these classes.
+            If the summary is not given as a string.
         """
-        headers_contents = {key.lower(): val for key, val in headers_contents.items()}
         self.info = {}
+
+        headers_contents = {key.lower(): val for key, val in headers_contents.items()}
         for key, contents in headers_contents.items():
             if key in ['parameters', 'other parameters', 'attributes', 'methods', 'returns',
                        'yields', 'raises', 'see also']:
                 data = []
+                if not isinstance(contents, (list, tuple)):
+                    contents = [contents]
+
                 for item in contents:
+                    if isinstance(item, (ParamInfo, MethodInfo, TabbedInfo)):
+                        data.append(item)
+                        continue
+
                     try:
-                        data.append(ParamDocstring(**item))
+                        data.append(ParamInfo(**item))
                         continue
                     except TypeError:
                         pass
 
                     try:
-                        data.append(MethodDocstring(**item))
+                        data.append(MethodInfo(**item))
+                        continue
                     except TypeError:
                         pass
 
                     try:
-                        data.append(RaiseDocstring(**item))
+                        data.append(TabbedInfo(**item))
+                        continue
                     except TypeError:
                         pass
 
-                    if isinstance(contents, (ParamDocstring, MethodDocstring, RaiseDocstring)):
-                        data.append(item)
-                    else:
-                        raise ValueError(
-                            'Items of section, {0}, must be an instance of `ParamDocstring` or '
-                            '`MethodDocstring`, `RaiseDocstring` or be the parameters to the '
-                            'initializer of these clases.'.format(key)
-                        )
+                    raise ValueError(
+                        'Items of section, {0}, must be an instance of `ParamInfo` or '
+                        '`MethodInfo`, `TabbedInfo` or be the parameters to the '
+                        'initializer of these clases.'.format(key)
+                    )
                 self.info[key] = data
             elif key in ['extended', 'notes', 'references', 'examples']:
                 if isinstance(contents, str):
@@ -113,6 +131,8 @@ class Docstring:
                 else:
                     self.info[key] = contents
             else:
+                if key == 'summary' and not isinstance(contents, str):
+                    raise ValueError('Contents of summary must be a string.')
                 self.info[key] = contents
 
             if key not in ['summary', 'extended', 'parameters', 'other parameters', 'attributes',
@@ -164,7 +184,7 @@ class Docstring:
             for paragraph in self.info['extended']:
                 output += '\n\n{0}'.format(wrapper.fill(paragraph))
 
-        # Sections that contains list/tuple of ParamDocstring, MethodDocstring or RaiseDocstring
+        # Sections that contains list/tuple of ParamInfo, MethodInfo or TabbedInfo
         # make a list just in case dictionaries stop being ordered
         sections = ['parameters', 'other parameters', 'attributes', 'methods', 'returns', 'yields',
                     'raises', 'see also']
@@ -210,8 +230,77 @@ class Docstring:
         return output
 
 
-# TODO: turn each section into a class
-class ParamDocstring:
+class TabbedInfo:
+    """Class for storing docstring information where subsequent lines are tabbed.
+
+    For example, '''something\n    description''' can be described by this class.
+
+    Attributes
+    ----------
+    name : str
+        Name of the information.
+    docs : list of str
+        Description of the information.
+
+    Methods
+    -------
+    __init__(name, docs=None)
+        Initialize.
+    make_google()
+        Return correspond google docstring
+    make_numpy()
+        Return corresponding numpy docstring
+    """
+    def __init__(self, name, docs=None):
+        """Initialize ParamInfo.
+
+        Parameters
+        ----------
+        name : str
+            Name of the method.
+        docs : tuple/list of str
+            Each point of documentation of the method.
+        """
+        self.name = name
+        if isinstance(docs, str):
+            self.docs = [docs]
+        else:
+            self.docs = docs
+
+    def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
+        """Returns the numpy docstring that corresponds to the TabbedInfo instance.
+
+        Parameters
+        ----------
+        line_length : int
+            Maximum number of characters allowed in each width
+        indent_level : int
+            Number of indents (tabs) that are needed for the docstring
+        tab_width : int
+            Number of spaces that corresponds to a tab
+        """
+        avail_width = line_length - tab_width * indent_level
+        tab = '{0}'.format(tab_width * indent_level * ' ')
+        wrapper_kwargs = {'width': avail_width, 'expand_tabs': True, 'tabsize': tab_width,
+                          'replace_whitespace': False, 'drop_whitespace': True,
+                          'break_long_words': False}
+
+        output = ''
+        # first line
+        # NOTE: add subsequent indent just in case the types are long enough to wrap
+        output += textwrap.fill('{0}'.format(self.name),
+                                initial_indent=tab, subsequent_indent=tab, **wrapper_kwargs)
+        # subsequent lines
+        for description in self.docs:
+            output += '\n{0}'.format(textwrap.fill(description,
+                                                   initial_indent=tab + tab_width*' ',
+                                                   subsequent_indent=tab + tab_width*' ',
+                                                   **wrapper_kwargs))
+
+        return output
+
+
+class ParamInfo(TabbedInfo):
     """Class for storing docstring information on parameters.
 
     Attributes
@@ -233,7 +322,7 @@ class ParamDocstring:
         Return corresponding numpy docstring
     """
     def __init__(self, name, types, docs=None):
-        """Initialize ParamDocstring.
+        """Initialize ParamInfo.
 
         Parameters
         ----------
@@ -249,20 +338,17 @@ class ParamDocstring:
         TypeError
             If types of the parameter is not a string or a list/tuple of strings
         """
-        self.name = name
+        super().__init__(name, docs)
         if isinstance(types, str):
             self.types = [types]
         elif isinstance(types, (list, tuple)) and all(isinstance(i, str) for i in types):
             self.types = types
         else:
             raise TypeError('Types allowed by the parameter must be given as a string.')
-        if isinstance(docs, str):
-            self.docs = [docs]
-        else:
-            self.docs = docs
 
+    # FIXME: maybe use super().make_numpy somehow?
     def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
-        """Returns the numpy docstring that corresponds to the ParamDocstring instance.
+        """Returns the numpy docstring that corresponds to the ParamInfo instance.
 
         Parameters
         ----------
@@ -303,7 +389,7 @@ class ParamDocstring:
         return output
 
 
-class MethodDocstring:
+class MethodInfo(TabbedInfo):
     """Class for storing docstring information on methods.
 
     Attributes
@@ -325,7 +411,7 @@ class MethodDocstring:
         Return corresponding numpy docstring
     """
     def __init__(self, name, signature, docs=None):
-        """Initialize ParamDocstring.
+        """Initialize ParamInfo.
 
         Parameters
         ----------
@@ -336,18 +422,15 @@ class MethodDocstring:
         docs : tuple/list of str
             Each point of documentation of the method.
         """
-        self.name = name
+        super().__init__(name, docs)
         # FIXME: this can be broken with the right parenthesis structure
         if signature[0] != '(' or signature[-1] != ')':
             signature = '({0})'.format(signature)
         self.signature = signature
-        if isinstance(docs, str):
-            self.docs = [docs]
-        else:
-            self.docs = docs
 
+    # FIXME: maybe use super().make_numpy somehow?
     def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
-        """Returns the numpy docstring that corresponds to the MethodDocstring instance.
+        """Returns the numpy docstring that corresponds to the MethodInfo instance.
 
         Parameters
         ----------
@@ -370,74 +453,6 @@ class MethodDocstring:
         output += textwrap.fill('{0}{1}'.format(self.name, self.signature),
                                 initial_indent=tab, subsequent_indent=tab + ' '*(len(self.name)+1),
                                 **wrapper_kwargs)
-        # subsequent lines
-        for description in self.docs:
-            output += '\n{0}'.format(textwrap.fill(description,
-                                                   initial_indent=tab + tab_width*' ',
-                                                   subsequent_indent=tab + tab_width*' ',
-                                                   **wrapper_kwargs))
-
-        return output
-
-
-class RaiseDocstring:
-    """Class for storing docstring information on the error raised.
-
-    Attributes
-    ----------
-    name : str
-        Name of the error raised.
-    docs : list of str
-        Documentations for the error raised.
-
-    Methods
-    -------
-    __init__(name, docs=None)
-        Initialize.
-    make_google()
-        Return correspond google docstring
-    make_numpy()
-        Return corresponding numpy docstring
-    """
-    def __init__(self, name, docs=None):
-        """Initialize ParamDocstring.
-
-        Parameters
-        ----------
-        name : str
-            Name of the method.
-        docs : tuple/list of str
-            Each point of documentation of the method.
-        """
-        self.name = name
-        if isinstance(docs, str):
-            self.docs = [docs]
-        else:
-            self.docs = docs
-
-    def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
-        """Returns the numpy docstring that corresponds to the RaiseDocstring instance.
-
-        Parameters
-        ----------
-        line_length : int
-            Maximum number of characters allowed in each width
-        indent_level : int
-            Number of indents (tabs) that are needed for the docstring
-        tab_width : int
-            Number of spaces that corresponds to a tab
-        """
-        avail_width = line_length - tab_width * indent_level
-        tab = '{0}'.format(tab_width * indent_level * ' ')
-        wrapper_kwargs = {'width': avail_width, 'expand_tabs': True, 'tabsize': tab_width,
-                          'replace_whitespace': False, 'drop_whitespace': True,
-                          'break_long_words': False}
-
-        output = ''
-        # first line
-        # NOTE: add subsequent indent just in case the types are long enough to wrap
-        output += textwrap.fill('{0}'.format(self.name),
-                                initial_indent=tab, subsequent_indent=tab, **wrapper_kwargs)
         # subsequent lines
         for description in self.docs:
             output += '\n{0}'.format(textwrap.fill(description,
