@@ -76,12 +76,6 @@ def test_parse_numpy():
                                                     'signature': '(x, y)',
                                                     'descs': ['description1.', 'description2.']}]}
 
-    # contains quotes
-    docstring = ('"""summary"""')
-    assert parse_numpy(docstring, contains_quotes=True) == {'summary': 'summary'}
-    docstring = ('r"""sum\n\nmary"""')
-    assert parse_numpy(docstring, contains_quotes=True) == {'summary': r'sum\n\nmary'}
-
     # contains equations
     docstring = ('summary\n\n.. math::\n\n    \\frac{1}{2}')
     assert parse_numpy(docstring) == {'summary': 'summary',
@@ -125,3 +119,12 @@ def test_parse_numpy():
                                                                 '..math::\n    \\frac{1}{3}\n',
                                                                 'This is the float.']}]
                                       }
+
+
+def test_parse_numpy_raw():
+    """Test pydocstring.numpy_docstring.parse_numpy."""
+    docstring = '"""summary\n\nextended"""'
+    assert parse_numpy(docstring, contains_quotes=True) == {'summary': 'summary',
+                                                            'extended': ['extended']}
+    docstring = 'r"""summary\n\nextended"""'
+    assert_raises(NotImplementedError, parse_numpy, docstring, contains_quotes=True)

@@ -31,28 +31,30 @@ def parse_numpy(docstring, contains_quotes=False):
 
     Raises
     ------
-    valuError
+    ValueError
         If summary is not in the first or second line.
         If summary is now followed with a blank line.
         If number of '-' does not match the number of characters in the header.
         If given entry of the tabbed information (parameters, attributes, methods, returns, yields,
         raises, see also) had an unexpected pattern.
+    NotImplementedError
+        If quotes corresponds to a raw string, i.e. r\"\"\".
     """
     docstring = remove_indent(docstring, include_firstline=contains_quotes)
 
     # remove quotes from docstring
     if contains_quotes:
         quotes = r'[\'\"]{3}'
-        # FIXME: I'm not 100% sure that this does what I think it does. I want to convert allowed
-        #        strings that contain backslashes into raw representation (double slashes) because
-        #        they are interpreted as escape sequences or unicode otherwise. Backslahses are
-        #        frequently used when latex is used.
-        if docstring.startswith('r'):
-            docstring = repr(docstring)
-            docstring = re.sub(r"^'r", '', docstring)
-            docstring = re.sub(r"'$", '', docstring)
+        if re.search(r'^r{0}'.format(quotes), docstring):
+            raise NotImplementedError('A raw string quotation, i.e. r""" cannot be given as a '
+                                      'string, i.e. from reading a python file as a string, '
+                                      'because the backslashes belonging to escape sequences '
+                                      'cannot be distinguished from those of normal backslash.'
+                                      'You either need to change existing raw string to normal '
+                                      'i.e. convert all occurences of \\ to \\\\, or import the '
+                                      'docstring from the instance through `__doc__` attribute.')
     else:
-        quotes = ''
+        quotes = r''
     docstring = re.sub(r'^{0}'.format(quotes), '', docstring)
     docstring = re.sub(r'{0}$'.format(quotes), '', docstring)
 
