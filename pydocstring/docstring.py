@@ -93,7 +93,8 @@ class Docstring:
         headers_contents = {key.lower(): val for key, val in headers_contents.items()}
         for key, contents in headers_contents.items():
             if key in ['parameters', 'other parameters', 'attributes', 'methods', 'returns',
-                       'yields', 'raises', 'see also']:
+                       'yields', 'raises', 'see also', 'properties', 'abstract properties',
+                       'abstract methods']:
                 data = []
                 if not isinstance(contents, (list, tuple)):
                     contents = [contents]
@@ -174,47 +175,30 @@ class Docstring:
             for paragraph in self.info['extended']:
                 output += '\n\n{0}'.format(wrapper.fill(paragraph))
 
-        # Sections that contains list/tuple of TabbedInfo
-        # make a list just in case dictionaries stop being ordered
-        sections = ['parameters', 'other parameters', 'attributes', 'methods', 'returns', 'yields',
-                    'raises', 'see also']
-        headers = {'parameters': 'Parameters',
-                   'other parameters': 'Other Parameters',
-                   'attributes': 'Attributes',
-                   'methods': 'Methods',
-                   'returns': 'Returns',
-                   'yields': 'Yields',
-                   'raises': 'Raises',
-                   'see also': 'See Also'}
+        # set the order of documentation construction
+        sections = ['parameters', 'other parameters', 'attributes', 'properties',
+                    'abstract properties', 'methods', 'abstract methods', 'returns', 'yields',
+                    'raises', 'see also', 'notes', 'references', 'examples']
         for section in sections:
             if section not in self.info:
                 continue
-            output += '\n\n{0}\n{1}'.format(wrapper.fill(headers[section]),
-                                            wrapper.fill('-'*len(headers[section])))
-            for data in self.info[section]:
-                output += '\n{0}'.format(data.make_numpy(line_length=line_length,
-                                                         indent_level=indent_level,
-                                                         tab_width=tab_width))
+            # create header
+            output += '\n\n{0}\n{1}'.format(wrapper.fill(section.title()),
+                                            wrapper.fill('-'*len(section)))
 
-        # Sections that contains list of strings
-        sections = ['notes', 'references', 'examples']
-        headers = {'notes': 'Notes',
-                   'references': 'References',
-                   'examples': 'Examples'}
-        for section in sections:
-            if section not in self.info:
-                continue
-            output += '\n\n{0}\n{1}'.format(wrapper.fill(headers[section]),
-                                            wrapper.fill('-'*len(headers[section])))
-            for i, paragraph in enumerate(self.info[section]):
+            for i, entry in enumerate(self.info[section]):
                 if section == 'references':
                     wrapper.subsequent_indent = tab + 3*' '
                     wrapper.width -= 3
-                    output += '\n.. {0}'.format(wrapper.fill('[{0}] {1}'.format(i+1, paragraph)))
+                    output += '\n.. {0}'.format(wrapper.fill('[{0}] {1}'.format(i+1, entry)))
                     wrapper.subsequent_indent = tab
                     wrapper.width += 3
+                elif isinstance(entry, str):
+                    output += '{0}\n{1}'.format('\n' if i > 0 else '', wrapper.fill(entry))
                 else:
-                    output += '{0}\n{1}'.format('\n' if i > 0 else '', wrapper.fill(paragraph))
+                    output += '\n{0}'.format(entry.make_numpy(line_length=line_length,
+                                                              indent_level=indent_level,
+                                                              tab_width=tab_width))
 
         output += '\n{0}'.format(wrapper.fill('"""'))
         return output

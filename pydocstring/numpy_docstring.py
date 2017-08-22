@@ -109,7 +109,8 @@ def parse_numpy(docstring, contains_quotes=False):
         header = header.lower()
         # special headers (special format for each entry)
         if header in ['parameters', 'other parameters', 'attributes', 'methods', 'returns',
-                      'yields', 'raises', 'see also']:
+                      'yields', 'raises', 'see also', 'properties', 'abstract properties',
+                      'abstract methods']:
             entries = re.split(r'\n(?:!\s+)', contents)
             # FIXME: following regular expression would work only if docstring has spaces adjacent
             #        to ':'
