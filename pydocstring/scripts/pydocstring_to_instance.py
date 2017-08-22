@@ -1,0 +1,148 @@
+"""Script for converting the docstrings of a Python file from one format to another.
+
+Methods
+-------
+
+"""
+import argparse
+import inspect
+import os
+import re
+import shutil
+import sys
+import pydocstring.docstring
+import pydocstring.numpy_docstring
+
+
+# NOTE: use tokenize instead?
+def extract_docstring_module(module):
+    """Extracts docstrings recursively from a module from the same file.
+
+    Parameters
+    ----------
+    module : instance
+        Any python module.
+    """
+    filename = inspect.getsourcefile(module)
+    # find objects that are defined in the provided module
+    all_objects = inspect.getmembers(module)
+    defined_objects = []
+    for i in all_objects:
+        # skip code objects
+        if i[0] == '__code__':
+            continue
+        try:
+            if os.path.samefile(inspect.getsourcefile(i[1]), filename):
+                defined_objects.append(i[1])
+        except TypeError:
+            continue
+
+    # extract docstrings
+    output = []
+    for obj in defined_objects:
+        output.append(obj.__doc__)
+        output.extend(extract_docstring_module(obj))
+    return output
+
+
+def extract_docstring(filename):
+    """Extract the docstring from a python file.
+
+    Python file is imported and the docstring is extracted from the __doc__ attribute.
+
+    Parameters
+    ----------
+    filename : str
+        Name of the python file
+
+    Returns
+    -------
+    docstrings : list of str
+        List of docstrings found in the python file.
+
+    Raises
+    ------
+    ValueError
+        If there are unpaired (odd number of) triple quotatations.
+        If something goes wrong when finding the triple quotations.
+    """
+    dirname, modulename = os.path.split(filename)
+    # add directory to path
+    sys.path.insert(0, dirname)
+    # import file
+    module = __import__(os.path.splitext(modulename)[0])
+
+    return extract_docstring_module(module)
+
+
+def replace_docstrings(filename, doc_format, line_length=None, tab_width=None):
+    """Replace the specified docstrings from a file to another docstring.
+
+    Parameters
+    ----------
+    filename : str
+        Name of the file.
+    doc_format : {'numpy', 'google', 'rst', 'code'}
+        Format of the new docstring.
+
+    Raises
+    ------
+    ValueError
+        If the number of docstrings from `from_docstring` and `to_docstring` does not match.
+    NotImplementedError
+        If `doc_format` is not 'numpy'
+    """
+    if line_length is None:
+        line_length = 100
+    if tab_width is None:
+        tab_width = 4
+
+    old_docstrings = extract_docstring(filename)
+
+    # make backup
+    shutil.copyfile(filename, filename + '.bak')
+
+    # read code
+    with open(filename, 'r') as f:
+        code = f.read()
+
+    for old in old_docstrings:
+        doc_data = pydocstring.numpy_docstring.parse_numpy(old)
+        doc_instance = pydocstring.docstring.Docstring(**doc_data)
+        # extract details surrounding docstring (quotes, raw string, indentation)
+        re_old = r'( +)(r)?([\'"]+{0}\s*[\'"]+)'.format(re.escape(old))
+        details = re.search(re_old, code)
+        # FIXME: this will give weird results if given tab_width and tab_width of the file is
+        #        different
+        indent_level = len(details.group(1)) // tab_width
+        is_raw = details.group(2) == 'r'
+        if doc_format == 'numpy':
+            new = doc_instance.make_numpy(line_length=line_length, indent_level=indent_level,
+                                          tab_width=tab_width, is_raw=is_raw)
+        else:
+            raise NotImplementedError('Only the format numpy is supported at the moment.')
+        code = re.sub(re_old, new, code)
+
+    # write code
+    with open(filename, 'w') as f:
+        f.write(code)
+
+
+def main():
+    # parse arguments
+    parser = argparse.ArgumentParser(
+        description='Converts existing numpy docstring to another format.'
+    )
+    parser.add_argument('filename', action='store', nargs='?', default=None, type=str,
+                        help='Python file whose docstrings will be converted.')
+    parser.add_argument('format', action='store', nargs='?', default='numpy', type=str,
+                        help='Format of the generated docstrings.')
+    parser.add_argument('--linelength', action='store', nargs='?', default=None, type=int,
+                        dest='line_length', help='Maximum line length.')
+    parser.add_argument('--tabwidth', action='store', nargs='?', default=None, type=int,
+                        dest='tab_width', help='Number of spaces in a tab.')
+    args = parser.parse_args()
+
+    # replace docstrings
+    replace_docstrings(args.filename, args.format, line_length=args.line_length,
+                       tab_width=args.tab_width)

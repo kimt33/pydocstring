@@ -26,5 +26,5 @@ setup(name='pydocstring',
       extras_require={},
       package_data={},
       data_files=[],
-      entry_points={'console_scripts': []},
+      entry_points={'console_scripts': ['pydocstring_to_instance=pydocstring.scripts.pydocstring_to_instance:main']},
       )
