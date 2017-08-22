@@ -36,42 +36,42 @@ def test_parse_numpy():
     for header in ['parameters', 'attributes', 'methods', 'returns', 'yields', 'raises',
                    'other parameters', 'see also']:
         # name + multiple descriptions
-        docstring = ('summary\n\nblock1\n\nblock2\n\n{0}\n{1}\na\n    description1.\n'
+        docstring = ('summary\n\nblock1\n\nblock2\n\n{0}\n{1}\nabc\n    description1.\n'
                      '    description2.'.format(header.title(), '-'*len(header)))
         assert parse_numpy(docstring) == {'summary': 'summary',
                                           'extended': ['block1', 'block2'],
-                                          header: [{'name': 'a',
+                                          header: [{'name': 'abc',
                                                     'descs': ['description1.', 'description2.']}]}
         # name + types + multiple descriptions
-        docstring = ('summary\n\nblock1\n\nblock2\n\n{0}\n{1}\na : str\n    description1.\n'
+        docstring = ('summary\n\nblock1\n\nblock2\n\n{0}\n{1}\nabc : str\n    description1.\n'
                      '    description2.'.format(header.title(), '-'*len(header)))
         assert parse_numpy(docstring) == {'summary': 'summary',
                                           'extended': ['block1', 'block2'],
-                                          header: [{'name': 'a',
+                                          header: [{'name': 'abc',
                                                     'types': ['str'],
                                                     'descs': ['description1.', 'description2.']}]}
         # name + signature + multiple descriptions
-        docstring = ('summary\n\nblock1\n\nblock2\n\n{0}\n{1}\na(x, y)\n    description1.\n'
+        docstring = ('summary\n\nblock1\n\nblock2\n\n{0}\n{1}\nabc(x, y)\n    description1.\n'
                      '    description2.'.format(header.title(), '-'*len(header)))
         assert parse_numpy(docstring) == {'summary': 'summary',
                                           'extended': ['block1', 'block2'],
-                                          header: [{'name': 'a',
+                                          header: [{'name': 'abc',
                                                     'signature': '(x, y)',
                                                     'descs': ['description1.', 'description2.']}]}
         # name + types + signature + multiple descriptions
-        docstring = ('summary\n\nblock1\n\nblock2\n\n{0}\n{1}\na(x, y): str\n    description1.\n'
+        docstring = ('summary\n\nblock1\n\nblock2\n\n{0}\n{1}\nabc(x, y): str\n    description1.\n'
                      '    description2.'.format(header.title(), '-'*len(header)))
         assert parse_numpy(docstring) == {'summary': 'summary',
                                           'extended': ['block1', 'block2'],
-                                          header: [{'name': 'a',
+                                          header: [{'name': 'abc',
                                                     'types': ['str'],
                                                     'signature': '(x, y)',
                                                     'descs': ['description1.', 'description2.']}]}
         # name + types + signature + multiple descriptions - extended summary
-        docstring = ('summary\n\n{0}\n{1}\na(x, y): str\n    description1.\n'
+        docstring = ('summary\n\n{0}\n{1}\nabc(x, y): str\n    description1.\n'
                      '    description2.'.format(header.title(), '-'*len(header)))
         assert parse_numpy(docstring) == {'summary': 'summary',
-                                          header: [{'name': 'a',
+                                          header: [{'name': 'abc',
                                                     'types': ['str'],
                                                     'signature': '(x, y)',
                                                     'descs': ['description1.', 'description2.']}]}

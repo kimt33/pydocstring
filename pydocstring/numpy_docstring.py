@@ -113,7 +113,7 @@ def parse_numpy(docstring, contains_quotes=False):
             entries = re.split(r'\n(?:!\s+)', contents)
             # FIXME: following regular expression would work only if docstring has spaces adjacent
             #        to ':'
-            re_entry = re.compile(r'^(.+?)(\(.*?\))? *:? *(.*?)?\n')
+            re_entry = re.compile(r'^(.+?)(\(.*?\))?(?: *: *(.*?))?\n')
             for entry in entries:
                 if len(re_entry.split(entry)) != 5:
                     raise ValueError('Something went wrong. Could not process the following entry:'
@@ -129,7 +129,7 @@ def parse_numpy(docstring, contains_quotes=False):
                     signature = ', '.join(i.strip() for i in signature.split(','))
 
                 # process types
-                if types == '':
+                if types is None:
                     types = [None]
                 elif re.search(r'\{.+\}', types):
                     types = re.search(r'^\{(?:(.+?),\s*)*(.+?)\}$', types).groups()
