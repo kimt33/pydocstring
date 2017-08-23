@@ -117,58 +117,58 @@ def test_tabbedinfo_init():
 def test_tabbedinfo_make_numpy():
     """Tests pydocstring.docstring.TabbedInfo.make_numpy."""
     # description
-    info = docstring.TabbedInfo('line_length',
+    info = docstring.TabbedInfo('width',
                                 descs='Maximum number of characters allowed in each width')
-    assert (info.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
-            'line_length\n'
+    assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
+            'width\n'
             '    Maximum number of characters allowed in each width')
     # description + indentation
-    info = docstring.TabbedInfo('line_length',
+    info = docstring.TabbedInfo('width',
                                 descs='Maximum number of characters allowed in each width')
-    assert (info.make_numpy(line_length=35, indent_level=0, tab_width=4) ==
-            'line_length\n'
+    assert (info.make_numpy(width=35, indent_level=0, tabsize=4) ==
+            'width\n'
             '    Maximum number of characters\n'
             '    allowed in each width')
     # description + types
-    info = docstring.TabbedInfo('line_length', types='int',
+    info = docstring.TabbedInfo('width', types='int',
                                 descs='Maximum number of characters allowed in each width')
-    assert (info.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
-            'line_length : int\n'
+    assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
+            'width : int\n'
             '    Maximum number of characters allowed in each width')
-    info = docstring.TabbedInfo('line_length', types=['int', 'float'],
+    info = docstring.TabbedInfo('width', types=['int', 'float'],
                                 descs='Maximum number of characters allowed in each width')
-    assert (info.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
-            'line_length : {int, float}\n'
+    assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
+            'width : {int, float}\n'
             '    Maximum number of characters allowed in each width')
     # description + types + indentation
-    info = docstring.TabbedInfo('line_length', types=['int', 'float', 'np.int64'],
+    info = docstring.TabbedInfo('width', types=['int', 'float', 'np.int64'],
                                 descs='Maximum number of characters allowed in each width')
-    assert (info.make_numpy(line_length=35, indent_level=1, tab_width=4) ==
-            '    line_length : {int, float,\n'
+    assert (info.make_numpy(width=35, indent_level=1, tabsize=4) ==
+            '    width : {int, float,\n'
             '                   np.int64}\n'
             '        Maximum number of\n'
             '        characters allowed in each\n'
             '        width')
     # description + signature
-    info = docstring.TabbedInfo('line_length', signature='param1, param2',
+    info = docstring.TabbedInfo('width', signature='param1, param2',
                                 descs='Maximum number of characters allowed in each width')
-    assert (info.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
-            'line_length(param1, param2)\n'
+    assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
+            'width(param1, param2)\n'
             '    Maximum number of characters allowed in each width')
     # description + signature + indentation
-    info = docstring.TabbedInfo('line_length', signature='param1, param2, param3, param4',
+    info = docstring.TabbedInfo('width', signature='param1, param2, param3, param4',
                                 descs='Maximum number of characters allowed in each width')
-    assert (info.make_numpy(line_length=35, indent_level=1, tab_width=4) ==
-            '    line_length(param1, param2,\n'
+    assert (info.make_numpy(width=35, indent_level=1, tabsize=4) ==
+            '    width(param1, param2,\n'
             '                param3, param4)\n'
             '        Maximum number of\n'
             '        characters allowed in each\n'
             '        width')
     # description + signature + types
-    info = docstring.TabbedInfo('line_length', signature='param1, param2', types='int',
+    info = docstring.TabbedInfo('width', signature='param1, param2', types='int',
                                 descs='Maximum number of characters allowed in each width')
-    assert_raises(NotImplementedError, info.make_numpy, line_length=100, indent_level=0,
-                  tab_width=4)
+    assert_raises(NotImplementedError, info.make_numpy, width=100, indent_level=0,
+                  tabsize=4)
 
 
 def test_docstring_make_numpy():
@@ -177,14 +177,14 @@ def test_docstring_make_numpy():
     test = docstring.Docstring(
         summary='something happening in this thing, it really happens oh yes it does the thing',
     )
-    assert (test.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
+    assert (test.make_numpy(width=100, indent_level=0, tabsize=4) ==
             '"""something happening in this thing, it really happens oh yes it does the thing\n"""')
 
     # extended
     test = docstring.Docstring(extended='dasfsdf')
-    # assert_raises(NotImplementedError, test.make_numpy, line_length=100, indent_level=0,
-    #               tab_width=4)
-    assert (test.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
+    # assert_raises(NotImplementedError, test.make_numpy, width=100, indent_level=0,
+    #               tabsize=4)
+    assert (test.make_numpy(width=100, indent_level=0, tabsize=4) ==
             '"""\n\ndasfsdf\n"""')
 
     # parameters, attributes, methods, returns, yields, raises, other parameters, see also
@@ -196,7 +196,7 @@ def test_docstring_make_numpy():
                                                'descs': ('something happening in this thing, it '
                                                          'really happens oh yes it does '
                                                          'the thing')}})
-        assert (test.make_numpy(line_length=70, indent_level=0, tab_width=4) ==
+        assert (test.make_numpy(width=70, indent_level=0, tabsize=4) ==
                 '"""\n\n'
                 '{0}\n'
                 '{1}\n'
@@ -210,7 +210,7 @@ def test_docstring_make_numpy():
                                                'descs': ('something happening in this thing, it '
                                                          'really happens oh yes it does '
                                                          'the thing')}})
-        assert (test.make_numpy(line_length=70, indent_level=0, tab_width=4) ==
+        assert (test.make_numpy(width=70, indent_level=0, tabsize=4) ==
                 '"""\n\n'
                 '{0}\n'
                 '{1}\n'
@@ -222,7 +222,7 @@ def test_docstring_make_numpy():
                                                'descs': ('something happening in this thing, it '
                                                          'really happens oh yes it does '
                                                          'the thing')}})
-        assert (test.make_numpy(line_length=70, indent_level=0, tab_width=4) ==
+        assert (test.make_numpy(width=70, indent_level=0, tabsize=4) ==
                 '"""\n\n'
                 '{0}\n'
                 '{1}\n'
@@ -243,7 +243,7 @@ def test_docstring_make_numpy():
         raises={'name': 'NotImplementedError'},
         notes=['This function actually does nothing']
     )
-    assert (test.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
+    assert (test.make_numpy(width=100, indent_level=0, tabsize=4) ==
             '"""Returns something\n\n'
             'More description\n\n'
             'Parameters\n'
@@ -275,7 +275,7 @@ def test_docstring_make_numpy():
         notes=['This class actually does nothing'],
         references='some reference'
     )
-    assert (test.make_numpy(line_length=100, indent_level=0, tab_width=4) ==
+    assert (test.make_numpy(width=100, indent_level=0, tabsize=4) ==
             '"""Class for doing something.\n\n'
             'More description\n\n'
             'Attributes\n'

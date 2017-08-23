@@ -40,7 +40,7 @@ class Docstring:
         Return instance of Docstring that corresponds to provided instance.
     make_google()
         Return corresponding google docstring
-    make_numpy(self, line_length=100, indent_level=0, tab_width=4)
+    make_numpy(self, width=100, indent_level=0, tabsize=4)
         Return corresponding numpy docstring
 
     Example
@@ -129,24 +129,24 @@ class Docstring:
                 print('WARNING: keyword, {0}, is not compatible with the numpy write.'.format(key))
 
     # FIXME: all keywords that are not in numpy's doc sections will not be added
-    def make_numpy(self, line_length=100, indent_level=0, tab_width=4, is_raw=False):
+    def make_numpy(self, width=100, indent_level=0, tabsize=4, is_raw=False):
         """Returns the numpy docstring that corresponds to the Docstring instance.
 
         Parameters
         ----------
-        line_length : int
+        width : int
             Maximum number of characters allowed in each width
         indent_level : int
             Number of indents (tabs) that are needed for the docstring
-        tab_width : int
+        tabsize : int
             Number of spaces that corresponds to a tab
         is_raw : bool
             True if the generated numpy documentation string is a raw string. Docstring should be
             raw when backslash is used (e.g. math equations).
             Default is False.
         """
-        wrap_kwargs = {'line_length': line_length, 'indent_level': indent_level,
-                       'tab_width': tab_width}
+        wrap_kwargs = {'width': width, 'indent_level': indent_level,
+                       'tabsize': tabsize}
 
         output = pydocstring.utils.wrap('{0}{1}'.format('r' if is_raw else '', '"""'),
                                         **wrap_kwargs)
@@ -156,11 +156,11 @@ class Docstring:
             # NOTE: is this too harsh?
             # raise NotImplementedError('Summary needs to be provided to construct the numpy'
             #                           ' documentation.')
-        elif len(self.info['summary']) < (line_length
+        elif len(self.info['summary']) < (width
                                           - (6 if len(self.info) == 1 else 3)
                                           - (1 if is_raw else 0)):
             output += self.info['summary']
-        elif len(self.info['summary']) < line_length:
+        elif len(self.info['summary']) < width:
             output += '\n{0}'.format(pydocstring.utils.wrap(self.info['summary'], **wrap_kwargs))
         else:
             print('WARNING: summary is too long for the given indent level and line length.')
@@ -197,9 +197,9 @@ class Docstring:
                     output += '{0}\n{1}'.format('\n'*num_spaces,
                                                 pydocstring.utils.wrap(entry, **wrap_kwargs))
                 else:
-                    output += '\n{0}'.format(entry.make_numpy(line_length=line_length,
+                    output += '\n{0}'.format(entry.make_numpy(width=width,
                                                               indent_level=indent_level,
-                                                              tab_width=tab_width))
+                                                              tabsize=tabsize))
 
         output += '\n{0}'.format(pydocstring.utils.wrap('"""', **wrap_kwargs))
         return output
@@ -297,19 +297,19 @@ class TabbedInfo:
         else:
             raise TypeError('`descs` must be a string or a list/tuple of strings')
 
-    def make_numpy(self, line_length=100, indent_level=0, tab_width=4):
+    def make_numpy(self, width=100, indent_level=0, tabsize=4):
         """Returns the numpy docstring that corresponds to the TabbedInfo instance.
 
         Parameters
         ----------
-        line_length : int
+        width : int
             Maximum number of characters allowed in each width
         indent_level : int
             Number of indents (tabs) that are needed for the docstring
-        tab_width : int
+        tabsize : int
             Number of spaces that corresponds to a tab
         """
-        wrap_kwargs = {'line_length': line_length, 'expand_tabs': True, 'tabsize': tab_width,
+        wrap_kwargs = {'width': width, 'expand_tabs': True, 'tabsize': tabsize,
                        'replace_whitespace': False, 'drop_whitespace': True,
                        'break_long_words': False}
 

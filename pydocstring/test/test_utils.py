@@ -15,24 +15,24 @@ def test_remove_indent():
 
 def test_wrap():
     """Test pydocstring.utils.wrap."""
-    assert (pydocstring.utils.wrap('hello my name is', line_length=5, indent_level=0, tab_width=4)
+    assert (pydocstring.utils.wrap('hello my name is', width=5, indent_level=0, tabsize=4)
             == 'hello\nmy\nname\nis')
-    assert (pydocstring.utils.wrap('hello my name is', line_length=5, indent_level=1, tab_width=1)
+    assert (pydocstring.utils.wrap('hello my name is', width=5, indent_level=1, tabsize=1)
             == ' hello\n my\n name\n is')
-    assert (pydocstring.utils.wrap('\n\nhello   my   name   is\n\n', line_length=5, indent_level=0,
-                                   tab_width=4) == 'hello\nmy\nname\nis')
-    assert (pydocstring.utils.wrap('hello my name is', line_length=5, indent_level=0, tab_width=4,
+    assert (pydocstring.utils.wrap('\n\nhello   my   name   is\n\n', width=5, indent_level=0,
+                                   tabsize=4) == 'hello\nmy\nname\nis')
+    assert (pydocstring.utils.wrap('hello my name is', width=5, indent_level=0, tabsize=4,
                                    added_initial_indent='xx')
             == 'xxhello\nmy\nname\nis')
-    assert (pydocstring.utils.wrap('hello my name is', line_length=5, indent_level=0, tab_width=4,
+    assert (pydocstring.utils.wrap('hello my name is', width=5, indent_level=0, tabsize=4,
                                    added_subsequent_indent='xx')
             == 'hello\nxxmy\nxxname\nxxis')
-    assert (pydocstring.utils.wrap('hello my name is', line_length=5, indent_level=0, tab_width=4,
+    assert (pydocstring.utils.wrap('hello my name is', width=5, indent_level=0, tabsize=4,
                                    edges=('(', ')'))
             == '(hello)\n(my)\n(name)\n(is)')
-    assert (pydocstring.utils.wrap('hello my name is', line_length=11, indent_level=1, tab_width=1,
+    assert (pydocstring.utils.wrap('hello my name is', width=11, indent_level=1, tabsize=1,
                                    edges=('(', ')'))
             == ' (hello my)\n (name is)')
-    assert (pydocstring.utils.wrap('hello my name is', line_length=10, indent_level=1, tab_width=1,
+    assert (pydocstring.utils.wrap('hello my name is', width=10, indent_level=1, tabsize=1,
                                    edges=('(', ')'))
             == ' (hello)\n (my name)\n (is)')

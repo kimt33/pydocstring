@@ -75,7 +75,7 @@ def extract_docstring(filename):
     return extract_docstring_module(module)
 
 
-def replace_docstrings(filename, doc_format, line_length=None, tab_width=None):
+def replace_docstrings(filename, doc_format, width=None, tabsize=None):
     """Replace the specified docstrings from a file to another docstring.
 
     Parameters
@@ -92,10 +92,10 @@ def replace_docstrings(filename, doc_format, line_length=None, tab_width=None):
     NotImplementedError
         If `doc_format` is not 'numpy'
     """
-    if line_length is None:
-        line_length = 100
-    if tab_width is None:
-        tab_width = 4
+    if width is None:
+        width = 100
+    if tabsize is None:
+        tabsize = 4
 
     old_docstrings = extract_docstring(filename)
 
@@ -112,13 +112,16 @@ def replace_docstrings(filename, doc_format, line_length=None, tab_width=None):
         # extract details surrounding docstring (quotes, raw string, indentation)
         re_old = r'( +)(r)?([\'"]+{0}\s*[\'"]+)'.format(re.escape(old))
         details = re.search(re_old, code)
-        # FIXME: this will give weird results if given tab_width and tab_width of the file is
+        # FIXME: this will give weird results if given tabsize and tabsize of the file is
         #        different
-        indent_level = len(details.group(1)) // tab_width
+        indent_level = len(details.group(1)) // tabsize
         is_raw = details.group(2) == 'r'
         if doc_format == 'numpy':
-            new = doc_instance.make_numpy(line_length=line_length, indent_level=indent_level,
-                                          tab_width=tab_width, is_raw=is_raw)
+            new = doc_instance.make_numpy(width=width, indent_level=indent_level,
+                                          tabsize=tabsize, is_raw=is_raw)
+        elif doc_format == 'code':
+            new = doc_instance.make_code(width=width, indent_level=indent_level,
+                                         tabsize=tabsize)
         else:
             raise NotImplementedError('Only the format numpy is supported at the moment.')
         code = re.sub(re_old, new, code)
@@ -137,12 +140,12 @@ def main():
                         help='Python file whose docstrings will be converted.')
     parser.add_argument('format', action='store', nargs='?', default='numpy', type=str,
                         help='Format of the generated docstrings.')
-    parser.add_argument('--linelength', action='store', nargs='?', default=None, type=int,
-                        dest='line_length', help='Maximum line length.')
-    parser.add_argument('--tabwidth', action='store', nargs='?', default=None, type=int,
-                        dest='tab_width', help='Number of spaces in a tab.')
+    parser.add_argument('--width', action='store', nargs='?', default=None, type=int,
+                        dest='width', help='Maximum line length.')
+    parser.add_argument('--tabsize', action='store', nargs='?', default=None, type=int,
+                        dest='tabsize', help='Number of spaces in a tab.')
     args = parser.parse_args()
 
     # replace docstrings
-    replace_docstrings(args.filename, args.format, line_length=args.line_length,
-                       tab_width=args.tab_width)
+    replace_docstrings(args.filename, args.format, width=args.width,
+                       tabsize=args.tabsize)
