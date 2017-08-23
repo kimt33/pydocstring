@@ -56,7 +56,11 @@ def wrap(text, line_length=100, indent_level=0, tab_width=4, edges=('', ''),
     edges : 2-tuple of string
         Beginning and end of each sentence.
     kwargs : dict
-        Other options for the textwrap.fill
+        Other options for the textwrap.fill.
+        Default replaces tabs with spaces ('expand_tabs': True), does not replace whitespace
+        ('replace_whitespace': False), drops whitespaces (that are not indentations) before or after
+        sentences ('drop_whitespace': True), and does not break long word into smaller pieces
+        ('break_long_words': False).
     """
     default_kwargs = {'expand_tabs': True, 'replace_whitespace': False, 'drop_whitespace': True,
                       'break_long_words': False}
@@ -66,8 +70,9 @@ def wrap(text, line_length=100, indent_level=0, tab_width=4, edges=('', ''),
     initial_indent = tab + added_initial_indent
     subsequent_indent = tab + added_subsequent_indent
     text = textwrap.fill(text, initial_indent=initial_indent, subsequent_indent=subsequent_indent,
-                         tabsize=tab_width, width=line_length - len(edges[0]) - len(edges[1]))
+                         tabsize=tab_width, width=line_length - len(edges[0]) - len(edges[1]),
+                         **default_kwargs)
     lines = text.split('\n')
 
-    output = [re.sub(r'^(\s+)(.+)$', r'\1{0}\2{1}'.format(*edges), line) for line in lines]
+    output = [re.sub(r'^(\s*)(.+)$', r'\1{0}\2{1}'.format(*edges), line) for line in lines]
     return '\n'.join(output)
