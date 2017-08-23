@@ -1,4 +1,4 @@
-import textwrap
+import pydocstring.utils
 
 
 # FIXME: maybe use attributes to store header/section contents instead of a dictionary?
@@ -145,13 +145,11 @@ class Docstring:
             raw when backslash is used (e.g. math equations).
             Default is False.
         """
-        tab = '{0}'.format(tab_width * indent_level * ' ')
-        wrapper = textwrap.TextWrapper(width=line_length, expand_tabs=True, tabsize=tab_width,
-                                       replace_whitespace=False, drop_whitespace=True,
-                                       initial_indent=tab, subsequent_indent=tab,
-                                       break_long_words=False)
+        wrap_kwargs = {'line_length': line_length, 'indent_level': indent_level,
+                       'tab_width': tab_width}
 
-        output = wrapper.fill('{0}{1}'.format('r' if is_raw else '', '"""'))
+        output = pydocstring.utils.wrap('{0}{1}'.format('r' if is_raw else '', '"""'),
+                                        **wrap_kwargs)
         # summary
         if 'summary' not in self.info:
             pass
@@ -161,19 +159,19 @@ class Docstring:
         elif len(self.info['summary']) < (line_length
                                           - (6 if len(self.info) == 1 else 3)
                                           - (1 if is_raw else 0)):
-            output += '{0}'.format(self.info['summary'])
+            output += self.info['summary']
         elif len(self.info['summary']) < line_length:
-            output += '\n{0}'.format(wrapper.fill(self.info['summary']))
+            output += '\n{0}'.format(pydocstring.utils.wrap(self.info['summary'], **wrap_kwargs))
         else:
             print('WARNING: summary is too long for the given indent level and line length.')
-            output += '{0}'.format(self.info['summary'])
+            output += self.info['summary']
 
         # extended
         # FIXME: textwrap is not terribly reliable
         # FIXME: multiline string will contain all the tabs/spaces. these need to be removed
         if 'extended' in self.info:
             for paragraph in self.info['extended']:
-                output += '\n\n{0}'.format(wrapper.fill(paragraph))
+                output += '\n\n{0}'.format(pydocstring.utils.wrap(paragraph, **wrap_kwargs))
 
         # set the order of documentation construction
         sections = ['parameters', 'other parameters', 'attributes', 'properties',
@@ -183,24 +181,27 @@ class Docstring:
             if section not in self.info:
                 continue
             # create header
-            output += '\n\n{0}\n{1}'.format(wrapper.fill(section.title()),
-                                            wrapper.fill('-'*len(section)))
+            output += '\n\n{0}\n{1}'.format(pydocstring.utils.wrap(section.title(), **wrap_kwargs),
+                                            pydocstring.utils.wrap('-'*len(section), **wrap_kwargs))
 
             for i, entry in enumerate(self.info[section]):
                 if section == 'references':
-                    wrapper.subsequent_indent = tab + 3*' '
-                    wrapper.width -= 3
-                    output += '\n.. {0}'.format(wrapper.fill('[{0}] {1}'.format(i+1, entry)))
-                    wrapper.subsequent_indent = tab
-                    wrapper.width += 3
+                    output += '\n.. '
+                    # add three spaces for subsequent lines to account for '.. '
+                    output += pydocstring.utils.wrap('[{0}] {1}'.format(i+1, entry),
+                                                     added_subsequent_indent='   ',
+                                                     **wrap_kwargs)
                 elif isinstance(entry, str):
-                    output += '{0}\n{1}'.format('\n' if i > 0 else '', wrapper.fill(entry))
+                    # number of newlines before the block
+                    num_spaces = 1 if i > 0 else 0
+                    output += '{0}\n{1}'.format('\n'*num_spaces,
+                                                pydocstring.utils.wrap(entry, **wrap_kwargs))
                 else:
                     output += '\n{0}'.format(entry.make_numpy(line_length=line_length,
                                                               indent_level=indent_level,
                                                               tab_width=tab_width))
 
-        output += '\n{0}'.format(wrapper.fill('"""'))
+        output += '\n{0}'.format(pydocstring.utils.wrap('"""', **wrap_kwargs))
         return output
 
 
@@ -308,10 +309,9 @@ class TabbedInfo:
         tab_width : int
             Number of spaces that corresponds to a tab
         """
-        tab = '{0}'.format(tab_width * indent_level * ' ')
-        wrapper_kwargs = {'width': line_length, 'expand_tabs': True, 'tabsize': tab_width,
-                          'replace_whitespace': False, 'drop_whitespace': True,
-                          'break_long_words': False}
+        wrap_kwargs = {'line_length': line_length, 'expand_tabs': True, 'tabsize': tab_width,
+                       'replace_whitespace': False, 'drop_whitespace': True,
+                       'break_long_words': False}
 
         # first line
         # NOTE: add subsequent indent just in case signature and types are long enough to wrap
@@ -320,27 +320,26 @@ class TabbedInfo:
                                       'the type of the returned values.')
 
         if len(self.types) == 0:
-            signature = '{0}'.format(self.signature if self.signature != '' else '')
-            output = textwrap.fill('{0}{1}'.format(self.name, signature),
-                                   initial_indent=tab,
-                                   subsequent_indent=tab + ' '*(len(self.name)+1),
-                                   **wrapper_kwargs)
+            signature = self.signature if self.signature != '' else ''
+            output = pydocstring.utils.wrap('{0}{1}'.format(self.name, signature),
+                                            indent_level=indent_level,
+                                            added_subsequent_indent=' ' * (len(self.name) + 1),
+                                            **wrap_kwargs)
         elif len(self.types) == 1:
-            output = textwrap.fill('{0} : {1}'.format(self.name, self.types[0]),
-                                   initial_indent=tab,
-                                   subsequent_indent=tab + ' '*(len(self.name)+3),
-                                   **wrapper_kwargs)
+            output = pydocstring.utils.wrap('{0} : {1}'.format(self.name, self.types[0]),
+                                            indent_level=indent_level,
+                                            added_subsequent_indent=' ' * (len(self.name) + 3),
+                                            **wrap_kwargs)
         elif len(self.types) > 1:
-            output = textwrap.fill('{0} : {1}{2}{3}'.format(self.name,
-                                                            '{', ', '.join(self.types), '}'),
-                                   initial_indent=tab,
-                                   subsequent_indent=tab + ' '*(len(self.name)+4),
-                                   **wrapper_kwargs)
+            output = pydocstring.utils.wrap('{0} : {1}{2}{3}'.format(self.name, '{',
+                                                                     ', '.join(self.types), '}'),
+                                            indent_level=indent_level,
+                                            added_subsequent_indent=' ' * (len(self.name) + 4),
+                                            **wrap_kwargs)
         # subsequent lines
         for description in self.descs:
-            output += '\n{0}'.format(textwrap.fill(description,
-                                                   initial_indent=tab + tab_width*' ',
-                                                   subsequent_indent=tab + tab_width*' ',
-                                                   **wrapper_kwargs))
+            output += '\n{0}'.format(pydocstring.utils.wrap(description,
+                                                            indent_level=indent_level + 1,
+                                                            **wrap_kwargs))
 
         return output
