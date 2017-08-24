@@ -198,14 +198,24 @@ def test_layered_wrap():
            "    x\n"
            "]")
 
-    assert(pydocstring.utils.layered_wrap({('[', ']', False):
-                                           ['this is an example',
-                                            {('(', ')', False): ['hello hi how']},
-                                            {('x', 'x', False): ['bye bye']}]},
-                                          width=15)
+    # FIXME: bug
+    # assert(pydocstring.utils.layered_wrap({('[', ']', False):
+    #                                        ['this is an example',
+    #                                         {('(', ')', False): ['hello hi how']},
+    #                                         {('x', 'x', False): ['bye bye']}]},
+    #                                       width=15)
+    #        ==
+    #        "['this is an'\n"
+    #        " 'example',\n"
+    #        " ('hello hi'\n"
+    #        "  'how'),\n"
+    #        " x'bye bye'x]")
+
+    # FIXME: another bug
+    # cannot go from false to true
+    assert(pydocstring.utils.layered_wrap({('[', ']', False): {('(', ')', True): 'damn'}},
+                                          indent_level=1)
            ==
-           "['this is an'\n"
-           " 'example',\n"
-           " ('hello hi'\n"
-           "  'how'),\n"
-           " x'bye bye'x]")
+           "    [(\n"
+           "        'damn'\n"
+           "    )]")

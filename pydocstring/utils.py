@@ -114,6 +114,7 @@ def wrap(text, width=100, indent_level=0, tabsize=4, edges=('', ''), added_inden
 
 # FIXME: bug. see test
 # FIXME: add examples, make doc better
+# FIXME: seriously, this needs to not be recursive.
 def layered_wrap(dict_edges_contents, width=100, indent_level=0, tabsize=4, edges=("'", "'"),
                  added_indent='', remove_initial_indent=False, **kwargs):
     """Recursively wraps the content of a layer with the appropriate edges.
@@ -225,7 +226,7 @@ def layered_wrap(dict_edges_contents, width=100, indent_level=0, tabsize=4, edge
                                **kwargs)
         else:
             raise ValueError('Contents of `dict_edges_contents` must be a dictionary, string, or '
-                            'list/tuple of dictionaries and strings.')
+                             'list/tuple of dictionaries and strings.')
         if i != len(layer) - 1:
             if has_newline:
                 output += ',\n'
