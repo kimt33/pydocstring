@@ -73,7 +73,7 @@ def wrap(text, width=100, indent_level=0, tabsize=4, edges=('', ''), added_inden
     # default
     kwargs.setdefault('expand_tabs', True)
     kwargs.setdefault('replace_whitespace', False)
-    kwargs.setdefault('drop_whitespace', True)
+    kwargs.setdefault('drop_whitespace', tuple(edges) == ('', ''))
     kwargs.setdefault('break_long_words', False)
 
     # parameters
@@ -83,7 +83,7 @@ def wrap(text, width=100, indent_level=0, tabsize=4, edges=('', ''), added_inden
     if isinstance(added_indent, str):
         added_indent = [added_indent]
     if isinstance(added_indent, (list, tuple)) and len(added_indent) == 1:
-            added_indent *= 2
+        added_indent *= 2
     elif len(added_indent) > 2:
         raise ValueError('`added_indent` must be given as a string or a list/tuple of at most two '
                          'strings, where the first string correspond to the initial and the second '
@@ -93,11 +93,19 @@ def wrap(text, width=100, indent_level=0, tabsize=4, edges=('', ''), added_inden
     tab = tabsize * indent_level * ' '
     kwargs['initial_indent'] = kwargs.setdefault('initial_indent', tab) + added_indent[0]
     kwargs['subsequent_indent'] = kwargs.setdefault('subsequent_indent', tab) + added_indent[1]
+    num_indent = [len(kwargs['initial_indent']), len(kwargs['subsequent_indent'])]
 
     lines = textwrap.fill(text, **kwargs).split('\n')
     if remove_initial_indent:
         # remove the initial indent
-        lines[0] = lines[0][len(kwargs['initial_indent']):]
+        lines[0] = lines[0][num_indent[0]:]
+        num_indent[0] = 0
 
-    output = [re.sub(r'^(\s*)(.+)$', r'\1{0}\2{1}'.format(*edges), line) for line in lines]
+    # add edges
+    output = [re.sub(r'^({0})(.+)$'.format(' ' * num_indent[0]),
+                     r'\1{0}\2{1}'.format(*edges),
+                     lines[0])]
+    output += [re.sub(r'^({0})(.+)$'.format(' ' * num_indent[1]),
+                      r'\1{0}\2{1}'.format(*edges),
+                      line) for line in lines[1:]]
     return '\n'.join(output)

@@ -38,15 +38,27 @@ def test_wrap():
     # NOTE: Since break_long_words is false, words that are greater than the width are not broken
     #       into smaller pieces.
     # edges
-    assert (pydocstring.utils.wrap('hello my name is', width=5, indent_level=0, tabsize=4,
-                                   edges=('(', ')'))
-            == '(hello)\n(my)\n(name)\n(is)')
+    assert (pydocstring.utils.wrap('hello', indent_level=0, tabsize=4, edges=("'", "'"),
+                                   remove_initial_indent=True, added_indent='  ')
+            == "'hello'")
+    assert (pydocstring.utils.wrap('hello my name is', width=7, indent_level=0, tabsize=4,
+                                   edges=("'", "'"))
+            ==
+            "'hello'\n"
+            "' my '\n"
+            "'name '\n"
+            "'is'")
     assert (pydocstring.utils.wrap('hello my name is', width=11, indent_level=1, tabsize=1,
-                                   edges=('(', ')'))
-            == ' (hello my)\n (name is)')
+                                   edges=("'", "'"))
+            ==
+            " 'hello my'\n"
+            " ' name is'")
     assert (pydocstring.utils.wrap('hello my name is', width=10, indent_level=1, tabsize=1,
-                                   edges=('(', ')'))
-            == ' (hello)\n (my name)\n (is)')
+                                   edges=("'", "'"))
+            ==
+            " 'hello '\n"
+            " 'my name'\n"
+            " ' is'")
     # remove initial indent
     start = 'x = ('
     end = ')'
