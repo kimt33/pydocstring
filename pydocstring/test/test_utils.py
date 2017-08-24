@@ -92,3 +92,120 @@ def test_wrap():
             '     5 +\n'
             '     6 +\n'
             '     7)'))
+
+
+def test_layered_wrap():
+    """Test pydocstring.utils.layered_wrap."""
+    assert (pydocstring.utils.layered_wrap({('[', ']', False): ['hello']})
+            == "['hello']")
+    assert (pydocstring.utils.layered_wrap({('[', ']', True): ['hello']})
+            ==
+            "[\n"
+            "    'hello'\n"
+            "]")
+    assert (pydocstring.utils.layered_wrap({('[', ']', False): ['hello', 'hi']})
+            == "['hello', 'hi']")
+    assert (pydocstring.utils.layered_wrap({('[', ']', True): ['hello', 'hi']})
+            ==
+            "[\n"
+            "    'hello',\n"
+            "    'hi'\n"
+            "]")
+    assert(pydocstring.utils.layered_wrap({('[', ']', True): [{('(', ')', True): ['hello', 'hi']},
+                                                              {('x', 'x', False): ['bye']}]})
+           ==
+           "[\n"
+           "    (\n"
+           "        'hello',\n"
+           "        'hi'\n"
+           "    ),\n"
+           "    x'bye'x\n"
+           "]")
+    assert(pydocstring.utils.layered_wrap({('[', ']', False): [{('(', ')', True): ['hello', 'hi']},
+                                                               {('x', 'x', False): ['bye']}]})
+           ==
+           "[(\n"
+           "    'hello',\n"
+           "    'hi'\n"
+           "), x'bye'x]")
+    assert(pydocstring.utils.layered_wrap({('[', ']', False): [{('(', ')', False): ['hello', 'hi']},
+                                                               {('x', 'x', True): ['bye']}]})
+           ==
+           "[('hello', 'hi'), x\n"
+           "    'bye'\n"
+           "x]")
+    assert(pydocstring.utils.layered_wrap({('[', ']', True): ['adfs',
+                                                              {('(', ')', True): ['hello', 'hi']},
+                                                              {('x', 'x', False): ['bye']}]})
+           ==
+           "[\n"
+           "    'adfs',\n"
+           "    (\n"
+           "        'hello',\n"
+           "        'hi'\n"
+           "    ),\n"
+           "    x'bye'x\n"
+           "]")
+
+    # wrap
+    assert(pydocstring.utils.layered_wrap({('xy', 'z', False): ['1 2 3 4 5 6 7 8 9 0']},
+                                          width=10)
+           ==
+           "xy'1 2 3 '\n"
+           "  '4 5 6 '\n"
+           "  '7 8 9 '\n"
+           "  '0'z")
+    assert(pydocstring.utils.layered_wrap({('xy', 'z', True): ['1 2 3 4 5 6 7 8 9 0']},
+                                          width=10)
+           ==
+           "xy\n"
+           "    '1 2 '\n"
+           "    '3 4 '\n"
+           "    '5 6 '\n"
+           "    '7 8 '\n"
+           "    '9 0'\n"
+           "z")
+    assert(pydocstring.utils.layered_wrap({('[', ']', False): ['hello my name is something seven']},
+                                          width=19)
+           ==
+           "['hello my name is'\n"
+           " ' something seven']")
+
+    assert(pydocstring.utils.layered_wrap({('[', ']', True): ['hello my name is something seven']},
+                                          width=19)
+           ==
+           "[\n"
+           "    'hello my name'\n"
+           "    ' is something'\n"
+           "    ' seven'\n"
+           "]")
+    assert(pydocstring.utils.layered_wrap({('[', ']', True): ['this is an example',
+                                                              {('(', ')', True): ['hello hi']},
+                                                              {('x', 'x', True): ['bye bye']}]},
+                                          width=15)
+           ==
+           "[\n"
+           "    'this is '\n"
+           "    'an '\n"
+           "    'example',\n"
+           "    (\n"
+           "        'hello'\n"
+           "        ' hi'\n"
+           "    ),\n"
+           "    x\n"
+           "        'bye '\n"
+           "        'bye'\n"
+           "    x\n"
+           "]")
+
+    assert(pydocstring.utils.layered_wrap({('[', ']', False):
+                                           ['this is an example',
+                                            {('(', ')', False): ['hello hi how']},
+                                            {('x', 'x', False): ['bye bye']}]},
+                                          width=15)
+           ==
+           "['this is an'\n"
+           " 'example',\n"
+           " ('hello hi'\n"
+           "  'how'),\n"
+           " x'bye bye'x]")
