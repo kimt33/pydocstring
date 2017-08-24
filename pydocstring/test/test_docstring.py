@@ -292,3 +292,184 @@ def test_docstring_make_numpy():
             '----------\n'
             '.. [1] some reference\n'
             '"""')
+
+
+def test_docstring_make_code():
+    """Tests pydocstring.docstring.Docstring.make_code."""
+    # summary
+    test = docstring.Docstring(
+        summary='something happening in this thing, it really happens oh yes it does the thing',
+    )
+    assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
+            "__doc__ = Docstring(**{\n"
+            "    'summary': ('something happening in this thing, it really happens oh yes it does "
+            "the thing')\n"
+            "})")
+
+    # extended
+    test = docstring.Docstring(extended='dasfsdf')
+    assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
+            "__doc__ = Docstring(**{\n"
+            "    'extended': [\n"
+            "        ('dasfsdf')\n"
+            "    ]\n"
+            "})")
+    test = docstring.Docstring(extended=['dasfsdf', 'ffdsfsdf'])
+    assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
+            "__doc__ = Docstring(**{\n"
+            "    'extended': [\n"
+            "        ('dasfsdf'),\n"
+            "        ('ffdsfsdf')\n"
+            "    ]\n"
+            "})")
+
+    # parameters, attributes, methods, returns, yields, raises, other parameters, see also
+    for header in ['parameters', 'attributes', 'methods', 'returns', 'yields', 'raises',
+                   'other parameters', 'see also']:
+        # with types and description
+        test = docstring.Docstring(**{header: {'name': 'something',
+                                               'types': ['sometype1', 'sometype2'],
+                                               'descs': ('something happening in this thing, it '
+                                                         'really happens oh yes it does '
+                                                         'the thing')}})
+        assert (test.make_code(width=70, indent_level=0, tabsize=4) ==
+                "__doc__ = Docstring(**{\n"
+                "    '" + header + "': [\n"
+                "        {\n"
+                "            'name': ('something'),\n"
+                "            'types': ['sometype1', 'sometype2'],\n"
+                "            'descs': [\n"
+                "                ('something happening in this thing, it really '\n"
+                "                 'happens oh yes it does the thing')\n"
+                "            ]\n"
+                "        }\n"
+                "    ]\n"
+                "})")
+        # with signature and description
+        test = docstring.Docstring(**{header: {'name': 'something',
+                                               'signature': 'a, b, c',
+                                               'descs': ('something happening in this thing, it '
+                                                         'really happens oh yes it does '
+                                                         'the thing')}})
+        assert (test.make_code(width=70, indent_level=0, tabsize=4) ==
+                "__doc__ = Docstring(**{\n"
+                "    '" + header + "': [\n"
+                "        {\n"
+                "            'name': ('something'),\n"
+                "            'signature': ('(a, b, c)'),\n"
+                "            'descs': [\n"
+                "                ('something happening in this thing, it really '\n"
+                "                 'happens oh yes it does the thing')\n"
+                "            ]\n"
+                "        }\n"
+                "    ]\n"
+                "})")
+        # with description
+        test = docstring.Docstring(**{header: {"name": "something",
+                                               "descs": ("something happening in this thing, it "
+                                                         "really happens oh yes it does "
+                                                         "the thing")}})
+        assert (test.make_code(width=70, indent_level=0, tabsize=4) ==
+                "__doc__ = Docstring(**{\n"
+                "    '" + header + "': [\n"
+                "        {\n"
+                "            'name': ('something'),\n"
+                "            'descs': [\n"
+                "                ('something happening in this thing, it really '\n"
+                "                 'happens oh yes it does the thing')\n"
+                "            ]\n"
+                "        }\n"
+                "    ]\n"
+                "})")
+
+    # example function
+    test = docstring.Docstring(
+        summary="Returns something",
+        extended="More description",
+        parameters={"name": "x",
+                    "types": ["sometype1", "sometype2"],
+                    "descs": "parameter of the function"},
+        returns={"name": "something",
+                 "types": "str",
+                 "descs": "value of the function at x"},
+        raises={"name": "NotImplementedError"},
+        notes=["This function actually does nothing"]
+    )
+    assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
+            "__doc__ = Docstring(**{\n"
+            "    'summary': ('Returns something')\n"
+            "    'extended': [\n"
+            "        ('More description')\n"
+            "    ]\n"
+            "    'parameters': [\n"
+            "        {\n"
+            "            'name': ('x'),\n"
+            "            'types': ['sometype1', 'sometype2'],\n"
+            "            'descs': [\n"
+            "                ('parameter of the function')\n"
+            "            ]\n"
+            "        }\n"
+            "    ]\n"
+            "    'returns': [\n"
+            "        {\n"
+            "            'name': ('something'),\n"
+            "            'types': ['str'],\n"
+            "            'descs': [\n"
+            "                ('value of the function at x')\n"
+            "            ]\n"
+            "        }\n"
+            "    ]\n"
+            "    'raises': [\n"
+            "        {\n"
+            "            'name': ('NotImplementedError')\n"
+            "        }\n"
+            "    ]\n"
+            "    'notes': [\n"
+            "        ('This function actually does nothing')\n"
+            "    ]\n"
+            "})")
+
+    # example class
+    test = docstring.Docstring(
+        summary="Class for doing something.",
+        extended="More description",
+        attributes={"name": "x",
+                    "types": ["sometype1", "sometype2"],
+                    "descs": "some attribute"},
+        methods={"name": "f",
+                 "signature": "(x)",
+                 "descs": "Does nothing."},
+        notes=["This class actually does nothing"],
+        references="some reference"
+    )
+    assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
+            "__doc__ = Docstring(**{\n"
+            "    'summary': ('Class for doing something.')\n"
+            "    'extended': [\n"
+            "        ('More description')\n"
+            "    ]\n"
+            "    'attributes': [\n"
+            "        {\n"
+            "            'name': ('x'),\n"
+            "            'types': ['sometype1', 'sometype2'],\n"
+            "            'descs': [\n"
+            "                ('some attribute')\n"
+            "            ]\n"
+            "        }\n"
+            "    ]\n"
+            "    'methods': [\n"
+            "        {\n"
+            "            'name': ('f'),\n"
+            "            'signature': ('(x)'),\n"
+            "            'descs': [\n"
+            "                ('Does nothing.')\n"
+            "            ]\n"
+            "        }\n"
+            "    ]\n"
+            "    'notes': [\n"
+            "        ('This class actually does nothing')\n"
+            "    ]\n"
+            "    'references': [\n"
+            "        ('some reference')\n"
+            "    ]\n"
+            "})")

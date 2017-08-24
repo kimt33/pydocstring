@@ -204,6 +204,83 @@ class Docstring:
         output += '\n{0}'.format(pydocstring.utils.wrap('"""', **wrap_kwargs))
         return output
 
+    # FIXME: arbitrary section headers are excluded
+    def make_code(self, width=100, indent_level=0, tabsize=4):
+        """Make a piece of code that would generate and store the corresponding docstring.
+
+        Parameters
+        ----------
+        width : int
+            Maximum number of characters allowed in each width
+        indent_level : int
+            Number of indents (tabs) that are needed for the docstring
+        tabsize : int
+            Number of spaces that corresponds to a tab
+        """
+        wrap_kwargs = {'tabsize': tabsize}
+
+        output = pydocstring.utils.wrap('__doc__ = Docstring(**{', indent_level=indent_level,
+                                        width=width, **wrap_kwargs)
+
+        # ordered for prettiness
+        sections = ['summary', 'extended', 'parameters', 'other parameters', 'attributes',
+                    'properties', 'abstract properties', 'methods', 'abstract methods', 'returns',
+                    'yields', 'raises', 'see also', 'notes', 'references', 'examples']
+        for section in sections:
+            if section not in self.info:
+                continue
+            contents = self.info[section]
+            output += '\n'
+            # e.g. summary
+            if isinstance(contents, str):
+                output += pydocstring.utils.layered_wrap({
+                    ("'{0}': (".format(section), ')', False): contents,
+                }, width=width, indent_level=indent_level + 1, tabsize=tabsize)
+            # if multiple entry
+            elif isinstance(contents, list):
+                if all(isinstance(entry, str) for entry in contents):
+                    contents = [{('(', ')', False): entry} for entry in contents]
+
+                    output += pydocstring.utils.layered_wrap({
+                        ("'{0}': [".format(section), ']', True): contents
+                    }, width=width, indent_level=indent_level + 1, tabsize=tabsize)
+                elif all(isinstance(entry, TabbedInfo) for entry in contents):
+                    # convert TabbedInfo to dictionary
+                    new_contents = []
+
+                    for entry in contents:
+                        new_entry = []
+                        for attr in ['name', 'signature', 'types', 'descs']:
+                            if not getattr(entry, attr):
+                                continue
+                            if attr in ['name', 'signature']:
+                                new_entry.append({
+                                    ("'{0}': (".format(attr), ')', False): getattr(entry, attr)
+                                })
+                            elif attr == 'types':
+                                new_entry.append({
+                                    ("'{0}': [".format(attr), ']', False): getattr(entry, attr)
+                                })
+                            else:
+                                new_entry.append({
+                                    ("'{0}': [".format(attr), ']', True):
+                                    {('(', ')', False): getattr(entry, attr)}
+                                })
+                        # NOTE: I would rather this be false, because there would be more room for
+                        #       the content, but there is a bug in utils.layered_wrap that prevents
+                        #       nice formatting.
+                        new_contents.append({('{', '}', True): new_entry})
+
+                    output += pydocstring.utils.layered_wrap({
+                        ("'{0}': {1}".format(section, '['), ']', True): new_contents
+                    }, width=width, indent_level=indent_level + 1, tabsize=tabsize)
+            else:
+                raise ValueError
+        output += '\n'
+        output += pydocstring.utils.wrap('})', indent_level=indent_level, width=width,
+                                         **wrap_kwargs)
+        return output
+
 
 # FIXME: rename
 class TabbedInfo:
