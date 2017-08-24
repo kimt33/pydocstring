@@ -189,7 +189,7 @@ class Docstring:
                     output += '\n.. '
                     # add three spaces for subsequent lines to account for '.. '
                     output += pydocstring.utils.wrap('[{0}] {1}'.format(i+1, entry),
-                                                     added_subsequent_indent='   ',
+                                                     added_indent='   ', remove_initial_indent=True,
                                                      **wrap_kwargs)
                 elif isinstance(entry, str):
                     # number of newlines before the block
@@ -323,18 +323,18 @@ class TabbedInfo:
             signature = self.signature if self.signature != '' else ''
             output = pydocstring.utils.wrap('{0}{1}'.format(self.name, signature),
                                             indent_level=indent_level,
-                                            added_subsequent_indent=' ' * (len(self.name) + 1),
+                                            added_indent=('', ' ' * (len(self.name) + 1)),
                                             **wrap_kwargs)
         elif len(self.types) == 1:
             output = pydocstring.utils.wrap('{0} : {1}'.format(self.name, self.types[0]),
                                             indent_level=indent_level,
-                                            added_subsequent_indent=' ' * (len(self.name) + 3),
+                                            added_indent=('', ' ' * (len(self.name) + 3)),
                                             **wrap_kwargs)
         elif len(self.types) > 1:
             output = pydocstring.utils.wrap('{0} : {1}{2}{3}'.format(self.name, '{',
                                                                      ', '.join(self.types), '}'),
                                             indent_level=indent_level,
-                                            added_subsequent_indent=' ' * (len(self.name) + 4),
+                                            added_indent=('', ' ' * (len(self.name) + 4)),
                                             **wrap_kwargs)
         # subsequent lines
         for description in self.descs:

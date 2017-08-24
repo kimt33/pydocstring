@@ -144,8 +144,7 @@ def test_tabbedinfo_make_numpy():
     info = docstring.TabbedInfo('width', types=['int', 'float', 'np.int64'],
                                 descs='Maximum number of characters allowed in each width')
     assert (info.make_numpy(width=35, indent_level=1, tabsize=4) ==
-            '    width : {int, float,\n'
-            '                   np.int64}\n'
+            '    width : {int, float, np.int64}\n'
             '        Maximum number of\n'
             '        characters allowed in each\n'
             '        width')
@@ -159,8 +158,8 @@ def test_tabbedinfo_make_numpy():
     info = docstring.TabbedInfo('width', signature='param1, param2, param3, param4',
                                 descs='Maximum number of characters allowed in each width')
     assert (info.make_numpy(width=35, indent_level=1, tabsize=4) ==
-            '    width(param1, param2,\n'
-            '                param3, param4)\n'
+            '    width(param1, param2, param3,\n'
+            '          param4)\n'
             '        Maximum number of\n'
             '        characters allowed in each\n'
             '        width')
