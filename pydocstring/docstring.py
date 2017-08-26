@@ -129,7 +129,7 @@ class Docstring:
                 print('WARNING: keyword, {0}, is not compatible with the numpy write.'.format(key))
 
     # FIXME: all keywords that are not in numpy's doc sections will not be added
-    def make_numpy(self, width=100, indent_level=0, tabsize=4, is_raw=False):
+    def make_numpy(self, width=100, indent_level=0, tabsize=4, is_raw=False, include_quotes=True):
         """Returns the numpy docstring that corresponds to the Docstring instance.
 
         Parameters
@@ -148,8 +148,12 @@ class Docstring:
         wrap_kwargs = {'width': width, 'indent_level': indent_level,
                        'tabsize': tabsize}
 
-        output = pydocstring.utils.wrap('{0}{1}'.format('r' if is_raw else '', '"""'),
-                                        **wrap_kwargs)
+        if include_quotes:
+            output = pydocstring.utils.wrap('{0}{1}'.format('r' if is_raw else '', '"""'),
+                                            **wrap_kwargs)
+        else:
+            output = pydocstring.utils.wrap('', **wrap_kwargs)
+
         # summary
         if 'summary' not in self.info:
             pass
@@ -201,7 +205,8 @@ class Docstring:
                                                               indent_level=indent_level,
                                                               tabsize=tabsize))
 
-        output += '\n{0}'.format(pydocstring.utils.wrap('"""', **wrap_kwargs))
+        if include_quotes:
+            output += '\n{0}'.format(pydocstring.utils.wrap('"""', **wrap_kwargs))
         return output
 
     # FIXME: arbitrary section headers are excluded
