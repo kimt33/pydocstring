@@ -473,3 +473,40 @@ def test_docstring_make_code():
             "        ('some reference')\n"
             "    ]\n"
             "})")
+
+
+def test_docstring_make_code_specialchar():
+    """Test pydocstring.docstring.Docstring.make_code using special characters."""
+    # brackets
+    test = docstring.Docstring(
+        summary="Hello (hi).",
+    )
+    assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
+            "__doc__ = Docstring(**{\n"
+            "    'summary': ('Hello (hi).')\n"
+            "})")
+
+    # curly brackets
+    test = docstring.Docstring(
+        summary="Hello (hi).",
+    )
+    assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
+            "__doc__ = Docstring(**{\n"
+            "    'summary': ('Hello (hi).')\n"
+            "})")
+    # spaces
+    test = docstring.Docstring(
+        parameters={'name': 'x', 'types': 'int', 'descs': 'Some number'}
+    )
+    assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
+            "__doc__ = Docstring(**{\n"
+            "    'parameters': [\n"
+            "        {\n"
+            "            'name': ('x'),\n"
+            "            'types': ['int'],\n"
+            "            'descs': [\n"
+            "                ('Some number')\n"
+            "            ]\n"
+            "        }\n"
+            "    ]\n"
+            "})")

@@ -205,6 +205,7 @@ class Docstring:
         return output
 
     # FIXME: arbitrary section headers are excluded
+    # FIXME: functions cannot change docstring from within by assinging __doc__
     def make_code(self, width=100, indent_level=0, tabsize=4):
         """Make a piece of code that would generate and store the corresponding docstring.
 
@@ -276,6 +277,7 @@ class Docstring:
                     }, width=width, indent_level=indent_level + 1, tabsize=tabsize)
             else:
                 raise ValueError
+            output += ','
         output += '\n'
         output += pydocstring.utils.wrap('})', indent_level=indent_level, width=width,
                                          **wrap_kwargs)
