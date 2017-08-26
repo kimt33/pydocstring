@@ -1,3 +1,5 @@
+import inspect
+import os
 import re
 # FIXME: remove textwrap dependency and code from scratch
 import textwrap
@@ -236,4 +238,55 @@ def layered_wrap(dict_edges_contents, width=100, indent_level=0, tabsize=4, edge
         output += '\n'
     output += wrapped_r_edge
 
+    return output
+
+
+# NOTE: use tokenize instead?
+def extract_members(module, recursive=False):
+    """Extracts all members of a module that are defined in the same file.
+
+    Parameters
+    ----------
+    module : instance
+        Any python module.
+
+    Returns
+    -------
+    """
+    # get file location
+    filename = inspect.getsourcefile(module)
+    # find objects that are defined in the provided module
+    all_members = inspect.getmembers(module)
+    defined_names = []
+    defined_members = []
+    for name, member in all_members:
+        # skip code objects
+        if name == '__code__':
+            continue
+
+        # property
+        if isinstance(member, property):
+            # cannot getsourcefile of property objects
+            # NOTE: all property objects that belong to an instance is assumed to be defined within
+            #       that instance (i.e. not inherited)
+            defined_names.append(name)
+            defined_members.append(member)
+
+        # other objects
+        try:
+            sourcefile = inspect.getsourcefile(member)
+        except TypeError:
+            continue
+        else:
+            if os.path.samefile(sourcefile, filename):
+                defined_names.append(name)
+                defined_members.append(member)
+
+    # extract objects
+    output = {}
+    for name, member in zip(defined_names, defined_members):
+        output[name] = member
+        # recurse
+        if not isinstance(member, property) and recursive:
+            output.extend(extract_members(member))
     return output

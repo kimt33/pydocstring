@@ -5,50 +5,13 @@ Methods
 
 """
 import argparse
-import inspect
 import os
 import re
 import shutil
 import sys
 import pydocstring.docstring
 import pydocstring.numpy_docstring
-
-
-# NOTE: use tokenize instead?
-def extract_docstring_module(module):
-    """Extracts docstrings recursively from a module from the same file.
-
-    Parameters
-    ----------
-    module : instance
-        Any python module.
-    """
-    filename = inspect.getsourcefile(module)
-    # find objects that are defined in the provided module
-    all_objects = inspect.getmembers(module)
-    defined_objects = []
-    for name, obj in all_objects:
-        # skip code objects
-        if name == '__code__':
-            continue
-        try:
-            # cannot getsourcefile of property objects
-            # NOTE: all property objects that belong to an instance is assumed to be defined within
-            #       that instance (i.e. not inherited)
-            if isinstance(obj, property):
-                defined_objects.append(obj)
-            elif os.path.samefile(inspect.getsourcefile(obj), filename):
-                defined_objects.append(obj)
-        except TypeError:
-            continue
-
-    # extract docstrings
-    output = []
-    for obj in defined_objects:
-        output.append(obj.__doc__)
-        if not isinstance(obj, property):
-            output.extend(extract_docstring_module(obj))
-    return output
+import pydocstring.utils
 
 
 def extract_docstring(filename):
@@ -77,8 +40,10 @@ def extract_docstring(filename):
     sys.path.insert(0, dirname)
     # import file
     module = __import__(os.path.splitext(modulename)[0])
+    # extract members
+    members = pydocstring.utils.extract_docstring_module(module, recursive=True).values()
 
-    return extract_docstring_module(module)
+    return [member.__doc__ for member in members]
 
 
 def replace_docstrings(filename, doc_format, width=None, tabsize=None):
