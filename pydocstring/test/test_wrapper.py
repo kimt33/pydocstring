@@ -111,17 +111,99 @@ def test_wrapper_docstring_recursive_class():
     assert hasattr(test, '_docstring')
     assert isinstance(test._docstring, pydocstring.docstring.Docstring)
     assert test._docstring.make_numpy(include_quotes=False) == test.__doc__
-    assert test._docstring.info['summary'] == 'kome test docstring.'
+    assert test._docstring.info['summary'] == 'Some test docstring.'
 
 
 def test_wrapper_docstring_func_kwargs():
     """Test pydocstring.wrapper.docstring on a function with keyword arguments."""
     @pydocstring.wrapper.docstring(indent_level=1)
-    def f():
+    def test():
         """Test docstring.
 
         Test extended."""
         pass
 
-    assert f.__doc__ == 'Test docstring.\n\n    Test extended.'
+    assert test.__doc__ == 'Test docstring.\n\n    Test extended.'
+    assert hasattr(test, '_docstring')
+    assert isinstance(test._docstring, pydocstring.docstring.Docstring)
+    assert test._docstring.make_numpy(include_quotes=False, indent_level=1) == test.__doc__
+    assert test._docstring.info['summary'] == 'Test docstring.'
+    assert test._docstring.info['extended'] == ['Test extended.']
 
+
+def test_wrapper_docstring_class_kwargs():
+    """Test pydocstring.wrapper.docstring on a class with keyword arguments."""
+    @pydocstring.wrapper.docstring(indent_level=1)
+    class Test:
+        """Test docstring.
+
+        Test extended."""
+        pass
+    test = Test()
+
+    assert test.__doc__ == 'Test docstring.\n\n    Test extended.'
+    assert hasattr(test, '_docstring')
+    assert isinstance(test._docstring, pydocstring.docstring.Docstring)
+    assert test._docstring.make_numpy(include_quotes=False, indent_level=1) == test.__doc__
+    assert test._docstring.info['summary'] == 'Test docstring.'
+    assert test._docstring.info['extended'] == ['Test extended.']
+
+
+def test_wrapper_docstring_recursive_func_kwargs():
+    """Test pydocstring.wrapper.docstring_recursive on a function with keyword arguments."""
+    def test():
+        """Test docstring.
+
+        Test extended."""
+        pass
+
+    def test2():
+        """Another docstring."""
+        pass
+
+    def test3():
+        """One more docstring."""
+        pass
+
+    test.test2 = test2
+    test.test3 = test3
+
+    # calling the wrapper
+    test = pydocstring.wrapper.docstring_recursive(test, indent_level=1)
+
+    docstrings = {test: 'Test docstring.\n\n    Test extended.',
+                  test.test2: 'Another docstring.',
+                  test.test3: 'One more docstring.'}
+    for obj, doc in docstrings.items():
+        assert obj.__doc__ == doc
+        assert hasattr(obj, '_docstring')
+        assert isinstance(obj._docstring, pydocstring.docstring.Docstring)
+        assert obj._docstring.make_numpy(include_quotes=False, indent_level=1) == obj.__doc__
+    assert test._docstring.info['summary'] == 'Test docstring.'
+    assert test._docstring.info['extended'] == ['Test extended']
+    assert test.test2._docstring.info['summary'] == 'Another docstring.'
+    assert test.test3._docstring.info['summary'] == 'One more docstring.'
+
+
+def test_wrapper_docstring_recursive_class_kwargs():
+    """Test pydocstring.wrapper.docstring_recursive on a class with keyword arguments."""
+    @pydocstring.wrapper.docstring_recursive(indent_level=1)
+    class Test:
+        """Test docstring.
+
+        Test extended."""
+        def x():
+            """Another docstring."""
+            pass
+    test = Test()
+
+    assert test.__doc__ == 'Test docstring.\n\n    Test extended.'
+    assert hasattr(test, '_docstring')
+    assert isinstance(test._docstring, pydocstring.docstring.Docstring)
+    assert test._docstring.make_numpy(include_quotes=False, indent_level=1) == test.__doc__
+    assert test._docstring.info['summary'] == 'Test docstring.'
+    assert test._docstring.info['extended'] == ['Test extended.']
+    assert test.x.__doc__ == 'Another docstring.'
+    assert hasattr(test.x, '_docstring')
+    assert isinstance(test.x._docstring, pydocstring.docstring.Docstring)
+    assert test.x._docstring.info['summary'] == 'Another docstring.'
