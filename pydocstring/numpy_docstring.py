@@ -26,7 +26,7 @@ def parse_numpy(docstring, contains_quotes=False):
         If the section is parameters, other parameters, attributes, methods, returns, yields,
         raises, or see also, then the value is a dictionary with keys 'name', 'signature', 'types',
         or 'docs', with corresonding values string, string, list of strings, and list of strings,
-        respectively
+        respectively.
         Otherwise, the values is a list of strings.
 
     Raises
@@ -83,17 +83,21 @@ def parse_numpy(docstring, contains_quotes=False):
             block = re.sub(r'\n+$', '', block)
             # remove quotes
             block = re.sub(r'\n*{0}$'.format(quotes), '', block)
+            # replace newlines
+            block = block.replace('\n', ' ')
 
             output.setdefault('extended', []).append(block)
         return output
 
     # split docstring by the headers
-    split_docstring = re.split(r'(.+)\n(-+)\n+', docstring)
+    split_docstring = re.split(r'\n*(.+)\n(-+)\n+', docstring)
     # check for extended summary
     if re.search(r'^-+$', split_docstring[2]):
         extended, *split_docstring = split_docstring
         # add extended
         extended = [block for block in re.split(r'\n\n+', extended) if block != '']
+        # remove newlines
+        extended = [block.replace('\n', ' ') for block in extended]
         if extended != []:
             output['extended'] = extended
 
@@ -111,10 +115,10 @@ def parse_numpy(docstring, contains_quotes=False):
         if header in ['parameters', 'other parameters', 'attributes', 'methods', 'returns',
                       'yields', 'raises', 'see also', 'properties', 'abstract properties',
                       'abstract methods']:
-            entries = re.split(r'\n(?:!\s+)', contents)
+            entries = (entry for entry in re.split(r'\n(?!\s+)', contents) if entry != '')
             # FIXME: following regular expression would work only if docstring has spaces adjacent
             #        to ':'
-            re_entry = re.compile(r'^(.+?)(\(.*?\))?(?: *: *(.*?))?\n')
+            re_entry = re.compile(r'^(.+?)(\(.+?\))?(?: *: *(.+))?(?:\n|$)')
             for entry in entries:
                 if len(re_entry.split(entry)) != 5:
                     raise ValueError('Something went wrong. Could not process the following entry:'
@@ -151,7 +155,9 @@ def parse_numpy(docstring, contains_quotes=False):
                 descs = [line for lines in descs for line in lines if line != '']
                 # add newline to math equation (only one is fine b/c newlines are added before each
                 # entry). two newlines are needed to compile the equation
-                descs = [line + '\n' if re_math.search(line) else line for line in descs]
+                # non math blocks will replace newlines with spaces.
+                descs = [line + '\n' if re_math.search(line) else line.replace('\n', ' ')
+                         for line in descs]
 
                 # store
                 output.setdefault(header, []).append({'name': name})
