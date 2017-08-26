@@ -27,13 +27,18 @@ def extract_docstring_module(module):
     # find objects that are defined in the provided module
     all_objects = inspect.getmembers(module)
     defined_objects = []
-    for i in all_objects:
+    for name, obj in all_objects:
         # skip code objects
-        if i[0] == '__code__':
+        if name == '__code__':
             continue
         try:
-            if os.path.samefile(inspect.getsourcefile(i[1]), filename):
-                defined_objects.append(i[1])
+            # cannot getsourcefile of property objects
+            # NOTE: all property objects that belong to an instance is assumed to be defined within
+            #       that instance (i.e. not inherited)
+            if isinstance(obj, property):
+                defined_objects.append(obj)
+            elif os.path.samefile(inspect.getsourcefile(obj), filename):
+                defined_objects.append(obj)
         except TypeError:
             continue
 
@@ -41,7 +46,8 @@ def extract_docstring_module(module):
     output = []
     for obj in defined_objects:
         output.append(obj.__doc__)
-        output.extend(extract_docstring_module(obj))
+        if not isinstance(obj, property):
+            output.extend(extract_docstring_module(obj))
     return output
 
 
@@ -97,6 +103,7 @@ def replace_docstrings(filename, doc_format, width=None, tabsize=None):
     if tabsize is None:
         tabsize = 4
 
+    # FIXME: add import
     old_docstrings = extract_docstring(filename)
 
     # make backup
