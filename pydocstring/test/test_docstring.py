@@ -303,7 +303,7 @@ def test_docstring_make_code():
     assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
             "__doc__ = Docstring(**{\n"
             "    'summary': ('something happening in this thing, it really happens oh yes it does "
-            "the thing')\n"
+            "the thing'),\n"
             "})")
 
     # extended
@@ -312,7 +312,7 @@ def test_docstring_make_code():
             "__doc__ = Docstring(**{\n"
             "    'extended': [\n"
             "        ('dasfsdf')\n"
-            "    ]\n"
+            "    ],\n"
             "})")
     test = docstring.Docstring(extended=['dasfsdf', 'ffdsfsdf'])
     assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
@@ -320,7 +320,7 @@ def test_docstring_make_code():
             "    'extended': [\n"
             "        ('dasfsdf'),\n"
             "        ('ffdsfsdf')\n"
-            "    ]\n"
+            "    ],\n"
             "})")
 
     # parameters, attributes, methods, returns, yields, raises, other parameters, see also
@@ -343,7 +343,7 @@ def test_docstring_make_code():
                 "                 'happens oh yes it does the thing')\n"
                 "            ]\n"
                 "        }\n"
-                "    ]\n"
+                "    ],\n"
                 "})")
         # with signature and description
         test = docstring.Docstring(**{header: {'name': 'something',
@@ -362,7 +362,7 @@ def test_docstring_make_code():
                 "                 'happens oh yes it does the thing')\n"
                 "            ]\n"
                 "        }\n"
-                "    ]\n"
+                "    ],\n"
                 "})")
         # with description
         test = docstring.Docstring(**{header: {"name": "something",
@@ -379,7 +379,7 @@ def test_docstring_make_code():
                 "                 'happens oh yes it does the thing')\n"
                 "            ]\n"
                 "        }\n"
-                "    ]\n"
+                "    ],\n"
                 "})")
 
     # example function
@@ -397,10 +397,10 @@ def test_docstring_make_code():
     )
     assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
             "__doc__ = Docstring(**{\n"
-            "    'summary': ('Returns something')\n"
+            "    'summary': ('Returns something'),\n"
             "    'extended': [\n"
             "        ('More description')\n"
-            "    ]\n"
+            "    ],\n"
             "    'parameters': [\n"
             "        {\n"
             "            'name': ('x'),\n"
@@ -409,7 +409,7 @@ def test_docstring_make_code():
             "                ('parameter of the function')\n"
             "            ]\n"
             "        }\n"
-            "    ]\n"
+            "    ],\n"
             "    'returns': [\n"
             "        {\n"
             "            'name': ('something'),\n"
@@ -418,15 +418,15 @@ def test_docstring_make_code():
             "                ('value of the function at x')\n"
             "            ]\n"
             "        }\n"
-            "    ]\n"
+            "    ],\n"
             "    'raises': [\n"
             "        {\n"
             "            'name': ('NotImplementedError')\n"
             "        }\n"
-            "    ]\n"
+            "    ],\n"
             "    'notes': [\n"
             "        ('This function actually does nothing')\n"
-            "    ]\n"
+            "    ],\n"
             "})")
 
     # example class
@@ -444,10 +444,10 @@ def test_docstring_make_code():
     )
     assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
             "__doc__ = Docstring(**{\n"
-            "    'summary': ('Class for doing something.')\n"
+            "    'summary': ('Class for doing something.'),\n"
             "    'extended': [\n"
             "        ('More description')\n"
-            "    ]\n"
+            "    ],\n"
             "    'attributes': [\n"
             "        {\n"
             "            'name': ('x'),\n"
@@ -456,7 +456,7 @@ def test_docstring_make_code():
             "                ('some attribute')\n"
             "            ]\n"
             "        }\n"
-            "    ]\n"
+            "    ],\n"
             "    'methods': [\n"
             "        {\n"
             "            'name': ('f'),\n"
@@ -465,13 +465,13 @@ def test_docstring_make_code():
             "                ('Does nothing.')\n"
             "            ]\n"
             "        }\n"
-            "    ]\n"
+            "    ],\n"
             "    'notes': [\n"
             "        ('This class actually does nothing')\n"
-            "    ]\n"
+            "    ],\n"
             "    'references': [\n"
             "        ('some reference')\n"
-            "    ]\n"
+            "    ],\n"
             "})")
 
 
@@ -483,7 +483,7 @@ def test_docstring_make_code_specialchar():
     )
     assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
             "__doc__ = Docstring(**{\n"
-            "    'summary': ('Hello (hi).')\n"
+            "    'summary': ('Hello (hi).'),\n"
             "})")
 
     # curly brackets
@@ -492,7 +492,7 @@ def test_docstring_make_code_specialchar():
     )
     assert (test.make_code(width=100, indent_level=0, tabsize=4) ==
             "__doc__ = Docstring(**{\n"
-            "    'summary': ('Hello (hi).')\n"
+            "    'summary': ('Hello (hi).'),\n"
             "})")
     # spaces
     test = docstring.Docstring(
@@ -508,5 +508,5 @@ def test_docstring_make_code_specialchar():
             "                ('Some number')\n"
             "            ]\n"
             "        }\n"
-            "    ]\n"
+            "    ],\n"
             "})")

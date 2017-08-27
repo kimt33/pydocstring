@@ -180,7 +180,7 @@ def test_wrapper_docstring_recursive_func_kwargs():
         assert isinstance(obj._docstring, pydocstring.docstring.Docstring)
         assert obj._docstring.make_numpy(include_quotes=False, indent_level=1) == obj.__doc__
     assert test._docstring.info['summary'] == 'Test docstring.'
-    assert test._docstring.info['extended'] == ['Test extended']
+    assert test._docstring.info['extended'] == ['Test extended.']
     assert test.test2._docstring.info['summary'] == 'Another docstring.'
     assert test.test3._docstring.info['summary'] == 'One more docstring.'
 
