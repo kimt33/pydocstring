@@ -288,5 +288,5 @@ def extract_members(module, recursive=False):
         output[name] = member
         # recurse
         if not isinstance(member, property) and recursive:
-            output.extend(extract_members(member))
+            output.update(extract_members(member))
     return output

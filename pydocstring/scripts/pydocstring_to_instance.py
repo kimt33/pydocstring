@@ -41,12 +41,13 @@ def extract_docstring(filename):
     # import file
     module = __import__(os.path.splitext(modulename)[0])
     # extract members
-    members = pydocstring.utils.extract_docstring_module(module, recursive=True).values()
+    members = [module]
+    members += pydocstring.utils.extract_members(module, recursive=True).values()
 
     return [member.__doc__ for member in members]
 
 
-def replace_docstrings(filename, doc_format, width=None, tabsize=None):
+def replace_docstrings(filename, doc_format, width=None, tabsize=None, write=True):
     """Replace the specified docstrings from a file to another docstring.
 
     Parameters
@@ -71,9 +72,6 @@ def replace_docstrings(filename, doc_format, width=None, tabsize=None):
     # FIXME: add import
     old_docstrings = extract_docstring(filename)
 
-    # make backup
-    shutil.copyfile(filename, filename + '.bak')
-
     # read code
     with open(filename, 'r') as f:
         code = f.read()
@@ -82,7 +80,7 @@ def replace_docstrings(filename, doc_format, width=None, tabsize=None):
         doc_data = pydocstring.numpy_docstring.parse_numpy(old)
         doc_instance = pydocstring.docstring.Docstring(**doc_data)
         # extract details surrounding docstring (quotes, raw string, indentation)
-        re_old = r'( +)(r)?([\'"]+{0}\s*[\'"]+)'.format(re.escape(old))
+        re_old = r'( *)(r)?([\'"]+{0}\s*[\'"]+)'.format(re.escape(old))
         details = re.search(re_old, code)
         # FIXME: this will give weird results if given tabsize and tabsize of the file is
         #        different
@@ -99,8 +97,14 @@ def replace_docstrings(filename, doc_format, width=None, tabsize=None):
         code = re.sub(re_old, new, code)
 
     # write code
-    with open(filename, 'w') as f:
-        f.write(code)
+    if write:
+        # make backup
+        shutil.copyfile(filename, filename + '.bak')
+        # over write
+        with open(filename, 'w') as f:
+            f.write(code)
+    else:
+        print(code)
 
 
 def main():
@@ -116,8 +120,10 @@ def main():
                         dest='width', help='Maximum line length.')
     parser.add_argument('--tabsize', action='store', nargs='?', default=None, type=int,
                         dest='tabsize', help='Number of spaces in a tab.')
+    parser.add_argument('--nowrite', action='store_false', default=True,
+                        dest='write', help='Flag for preventing an overwrite of the code.')
     args = parser.parse_args()
 
     # replace docstrings
     replace_docstrings(args.filename, args.format, width=args.width,
-                       tabsize=args.tabsize)
+                       tabsize=args.tabsize, write=args.write)
