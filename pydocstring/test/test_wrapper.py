@@ -1,8 +1,9 @@
+import abc
 import pydocstring.docstring
 import pydocstring.wrapper
 
 
-def test_wrapper_docstring_func():
+def test_wrapper_docstring_on_func():
     """Test pydocstring.wrapper.docstring on a function."""
     @pydocstring.wrapper.docstring
     def test():
@@ -30,7 +31,7 @@ def test_wrapper_docstring_func():
     assert test._docstring.info['parameters'][0].descs == ['Something.']
 
 
-def test_wrapper_docstring_class():
+def test_wrapper_docstring_on_class():
     """Test pydocstring.wrapper.docstring on a class."""
     @pydocstring.wrapper.docstring
     class Test:
@@ -59,7 +60,7 @@ def test_wrapper_docstring_class():
     assert test._docstring.info['attributes'][0].descs == ['Something.']
 
 
-def test_wrapper_docstring_recursive_func():
+def test_wrapper_docstring_recursive_on_func():
     """Test pydocstring.wrapper.docstring_recursive on a function."""
     def test():
         """Test docstring."""
@@ -91,7 +92,7 @@ def test_wrapper_docstring_recursive_func():
         assert obj._docstring.info['summary'] == doc
 
 
-def test_wrapper_docstring_recursive_class():
+def test_wrapper_docstring_recursive_on_class():
     """Test pydocstring.wrapper.docstring_recursive on a class."""
     @pydocstring.wrapper.docstring_recursive
     class Test:
@@ -114,7 +115,7 @@ def test_wrapper_docstring_recursive_class():
     assert test._docstring.info['summary'] == 'Some test docstring.'
 
 
-def test_wrapper_docstring_func_kwargs():
+def test_wrapper_docstring_on_func_kwargs():
     """Test pydocstring.wrapper.docstring on a function with keyword arguments."""
     @pydocstring.wrapper.docstring(indent_level=1)
     def test():
@@ -131,7 +132,7 @@ def test_wrapper_docstring_func_kwargs():
     assert test._docstring.info['extended'] == ['Test extended.']
 
 
-def test_wrapper_docstring_class_kwargs():
+def test_wrapper_docstring_on_class_kwargs():
     """Test pydocstring.wrapper.docstring on a class with keyword arguments."""
     @pydocstring.wrapper.docstring(indent_level=1)
     class Test:
@@ -149,7 +150,7 @@ def test_wrapper_docstring_class_kwargs():
     assert test._docstring.info['extended'] == ['Test extended.']
 
 
-def test_wrapper_docstring_recursive_func_kwargs():
+def test_wrapper_docstring_recursive_on_func_kwargs():
     """Test pydocstring.wrapper.docstring_recursive on a function with keyword arguments."""
     def test():
         """Test docstring.
@@ -185,7 +186,7 @@ def test_wrapper_docstring_recursive_func_kwargs():
     assert test.test3._docstring.info['summary'] == 'One more docstring.'
 
 
-def test_wrapper_docstring_recursive_class_kwargs():
+def test_wrapper_docstring_recursive_on_class_kwargs():
     """Test pydocstring.wrapper.docstring_recursive on a class with keyword arguments."""
     @pydocstring.wrapper.docstring_recursive(indent_level=1)
     class Test:
@@ -207,3 +208,98 @@ def test_wrapper_docstring_recursive_class_kwargs():
     assert hasattr(test.x, '_docstring')
     assert isinstance(test.x._docstring, pydocstring.docstring.Docstring)
     assert test.x._docstring.info['summary'] == 'Another docstring.'
+
+
+def test_wrapper_docstring_class():
+    """Test pydocstring.wrapper.docstring_class."""
+    # method
+    @pydocstring.wrapper.docstring_class
+    class Parent:
+        """Test docstring.
+
+        Test extended."""
+        def x():
+            """Another docstring."""
+            pass
+    test = Parent()
+    assert test.__doc__ == ('Test docstring.\n\n'
+                            'Test extended.\n\n'
+                            'Methods\n'
+                            '-------\n'
+                            'x()\n'
+                            '    Another docstring.')
+
+    # property
+    @pydocstring.wrapper.docstring_class
+    class Parent:
+        """Test docstring.
+
+        Test extended."""
+        @property
+        def x():
+            """Another docstring."""
+            pass
+    test = Parent()
+    assert test.__doc__ == ('Test docstring.\n\n'
+                            'Test extended.\n\n'
+                            'Properties\n'
+                            '----------\n'
+                            'x\n'
+                            '    Another docstring.')
+
+    # abstract method
+    @pydocstring.wrapper.docstring_class
+    class Parent(abc.ABC):
+        """Test docstring.
+
+        Test extended."""
+        @abc.abstractmethod
+        def x():
+            """Another docstring."""
+            pass
+    assert Parent.__doc__ == ('Test docstring.\n\n'
+                              'Test extended.\n\n'
+                              'Abstract Methods\n'
+                              '----------------\n'
+                              'x()\n'
+                              '    Another docstring.')
+
+    # abstract properties
+    @pydocstring.wrapper.docstring_class
+    class Parent(abc.ABC):
+        """Test docstring.
+
+        Test extended."""
+        @abc.abstractproperty
+        def x():
+            """Another docstring."""
+            pass
+    assert Parent.__doc__ == ('Test docstring.\n\n'
+                              'Test extended.\n\n'
+                              'Abstract Properties\n'
+                              '-------------------\n'
+                              'x\n'
+                              '    Another docstring.')
+
+    # inheritance from parent
+    @pydocstring.wrapper.docstring_class
+    class Parent:
+        """Test docstring.
+
+        Test extended."""
+        def x():
+            """Another docstring."""
+            pass
+
+    @pydocstring.wrapper.docstring_class(parent=Parent)
+    class Child(Parent):
+        """Overwritten docstring."""
+        pass
+
+    test = Child()
+    assert test.__doc__ == ('Overwritten docstring.\n\n'
+                            'Test extended.\n\n'
+                            'Methods\n'
+                            '-------\n'
+                            'x()\n'
+                            '    Another docstring.')

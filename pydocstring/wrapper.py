@@ -143,3 +143,115 @@ def docstring_recursive(obj, style='numpy', width=100, indent_level=0, tabsize=4
         setattr(obj, name, inner_obj)
 
     return obj
+
+
+@kwarg_wrapper
+def docstring_class(obj, parent=None, style='numpy', width=100, indent_level=0, tabsize=4,
+                    is_raw=False):
+    """Wrapper for inheriting docstrings from parents and methods.
+
+    Parameters
+    ----------
+    obj : class
+        Object that contains a docstring.
+    style : {'numpy', 'google', str}
+        Style of the docstring.
+    width : int
+        Maximum number of characters allowed in each width.
+    indent_level : int
+        Number of indents (tabs) that are needed for the docstring.
+    tabsize : int
+        Number of spaces that corresponds to a tab.
+    is_raw : bool
+        True if the generated numpy documentation string is a raw string. Docstring should be
+        raw when backslash is used (e.g. math equations).
+        Default is False.
+
+    Raises
+    ------
+    TypeError
+        If the `obj` is not a class.
+        If the obj's __doc__ is neither str nor Docstring instance.
+    NotImplementedError
+        If `style` is not 'numpy'.
+
+    Returns
+    -------
+    obj
+        Wrapped object where the docstring is in the selected format and the corresponding Docstring
+        instance is stored in `_docstring`.
+
+    """
+    if not inspect.isclass(obj):
+        raise TypeError('This decorator can only decorate classes.')
+
+    # create docstrings
+    obj = docstring_recursive(obj, style=style, width=width, indent_level=indent_level,
+                              tabsize=tabsize, is_raw=is_raw)
+
+    # inherit docstring its contents
+    for name, member in extract_members(obj).items():
+        # because we cannot change the attributes of a property, it needs to be parsed and then
+        # put back together...
+        if isinstance(member, property):
+            doc = Docstring(**parse_numpy(member.__doc__, contains_quotes=False))
+        else:
+            doc = member._docstring
+
+        # fill contents
+        contents = {'name': name, 'signature': '', 'types': '', 'descs': []}
+        if 'returns' in doc.info:
+            contents['types'] = [i for entry in doc.info['returns'] for i in entry.types]
+        if 'summary' in doc.info:
+            contents['descs'] = doc.info['summary']
+
+        # get section name
+        #  methods
+        if inspect.isfunction(member):
+            try:
+                is_abstract = name in obj.__abstractmethods__
+            except AttributeError:
+                section = 'methods'
+            else:
+                section = 'abstract methods' if is_abstract else 'methods'
+            # FIXME: only python 3.5+ has inspect.signature, I think.
+            if hasattr(inspect, 'signature'):
+                contents['signature'] = str(inspect.signature(member))
+
+        #  properties
+        elif isinstance(member, property):
+            try:
+                is_abstract = name in obj.__abstractmethods__
+            except AttributeError:
+                section = 'properties'
+            else:
+                section = 'abstract properties' if is_abstract else 'properties'
+        # CHECK: this is a little redundant b/c extract_members does not contain attributes
+        elif hasattr(obj, name):
+            section = 'attributes'
+
+        method_doc = Docstring(**{section: contents})
+        obj._docstring.inherit(method_doc)
+
+    # inherit from parents
+    for name, member in extract_members(obj).items():
+        try:
+            parent_member = getattr(super(obj.__class__, obj), name)
+            # the following is placed here rather than an else block b/c if parent does not have
+            # _docstring attribute, AtributeError is also raised
+            doc.inherit(parent_member)
+        except AttributeError:
+            continue
+        else:
+            member.__doc__ = doc.make_numpy(width=width, indent_level=indent_level,
+                                            tabsize=tabsize, is_raw=is_raw, include_quotes=False)
+
+    # NOTE: super doesn't play very well w/e wrappers b/c it seems that the class from super skips
+    #       the wrapper.
+    if parent is not None:
+        obj._docstring.inherit(parent._docstring)
+
+    obj.__doc__ = obj._docstring.make_numpy(width=width, indent_level=indent_level,
+                                            tabsize=tabsize, is_raw=is_raw, include_quotes=False)
+
+    return obj
