@@ -291,7 +291,7 @@ def test_wrapper_docstring_class():
             """Another docstring."""
             pass
 
-    @pydocstring.wrapper.docstring_class(parent=Parent)
+    @pydocstring.wrapper.docstring_class
     class Child(Parent):
         """Overwritten docstring."""
         pass

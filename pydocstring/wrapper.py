@@ -146,7 +146,7 @@ def docstring_recursive(obj, style='numpy', width=100, indent_level=0, tabsize=4
 
 
 @kwarg_wrapper
-def docstring_class(obj, parent=None, style='numpy', width=100, indent_level=0, tabsize=4,
+def docstring_class(obj, style='numpy', width=100, indent_level=0, tabsize=4,
                     is_raw=False):
     """Wrapper for inheriting docstrings from parents and methods.
 
@@ -246,9 +246,10 @@ def docstring_class(obj, parent=None, style='numpy', width=100, indent_level=0, 
             member.__doc__ = doc.make_numpy(width=width, indent_level=indent_level,
                                             tabsize=tabsize, is_raw=is_raw, include_quotes=False)
 
-    # NOTE: super doesn't play very well w/e wrappers b/c it seems that the class from super skips
-    #       the wrapper.
-    if parent is not None:
+    for parent in obj.__bases__:
+        if not hasattr(parent, '_docstring'):
+            continue
+        # FIXME: need to check if multiple parents have conflicting docstrings
         obj._docstring.inherit(parent._docstring)
 
     obj.__doc__ = obj._docstring.make_numpy(width=width, indent_level=indent_level,
