@@ -45,8 +45,8 @@ def docstring(obj, style='numpy', width=100, indent_level=0, tabsize=4, is_raw=F
 
     Parameters
     ----------
-    obj : str, pydocstring.docstring.Docstring
-        Docstring that will be converted.
+    obj : function, module, class
+        Object that contains a docstring.
     style : {'numpy', 'google', str}
         Style of the docstring.
     width : int
@@ -94,8 +94,8 @@ def docstring_recursive(obj, style='numpy', width=100, indent_level=0, tabsize=4
 
     Parameters
     ----------
-    obj : str, pydocstring.docstring.Docstring
-        Docstring that will be converted.
+    obj : function, module, class
+        Object that contains a docstring.
     style : {'numpy', 'google', str}
         Style of the docstring.
     width : int
