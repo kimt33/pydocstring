@@ -288,6 +288,33 @@ class Docstring:
                                          **wrap_kwargs)
         return output
 
+    def inherit(self, other):
+        """Inherit information from another Docstring instance.
+
+        If the other docstring has something that the current docstring does not have, it is
+        inherited. Otherwise, the original information is kept.
+
+        Parameters
+        ----------
+        other : Docstring
+            Docstring instance from which the information will be taken.
+
+        Notes
+        -----
+        Assumes that there is only one TabbedInfo per section that has a unique name.
+        """
+        for section, contents in other.info.items():
+            # if section is not present in self
+            if section not in self.info:
+                self.info[section] = contents
+
+            # if contents are TabbedInfo
+            elif all(isinstance(i, TabbedInfo) for i in self.info[section]):
+                # if given entry cannot be found in self
+                for entry in contents:
+                    if entry.name not in (i.name for i in self.info[section]):
+                        self.info[section].append(entry)
+
 
 # FIXME: rename
 class TabbedInfo:

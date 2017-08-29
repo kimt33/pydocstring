@@ -510,3 +510,44 @@ def test_docstring_make_code_specialchar():
             "        }\n"
             "    ],\n"
             "})")
+
+
+def test_docstring_inherit():
+    """Test pydocstring.docstring.Docstring.inherit."""
+    test_one = docstring.Docstring(summary='a')
+    test_two = docstring.Docstring(extended='b')
+    test_one.inherit(test_two)
+    assert test_one.info == {'summary': 'a', 'extended': ['b']}
+    assert test_two.info == {'extended': ['b']}
+
+    test_one = docstring.Docstring(summary='a')
+    test_two = docstring.Docstring(extended='b')
+    test_two.inherit(test_one)
+    assert test_one.info == {'summary': 'a'}
+    assert test_two.info == {'summary': 'a', 'extended': ['b']}
+
+    test_one = docstring.Docstring(summary='a')
+    test_two = docstring.Docstring(summary='b')
+    test_one.inherit(test_two)
+    assert test_one.info == {'summary': 'a'}
+
+    test_one = docstring.Docstring(parameters={'name': 'a', 'descs': 'one'})
+    test_two = docstring.Docstring(parameters={'name': 'b', 'descs': 'two'})
+    test_one.inherit(test_two)
+    assert test_one.info['parameters'][0].name == 'a'
+    assert test_one.info['parameters'][0].descs == ['one']
+    assert test_one.info['parameters'][1].name == 'b'
+    assert test_one.info['parameters'][1].descs == ['two']
+
+    test_one = docstring.Docstring(parameters={'name': 'a', 'descs': 'one'})
+    test_two = docstring.Docstring(parameters={'name': 'a', 'descs': 'two'})
+    test_one.inherit(test_two)
+    assert test_one.info['parameters'][0].name == 'a'
+    assert test_one.info['parameters'][0].descs == ['one']
+
+    test_one = docstring.Docstring(parameters={'name': 'a', 'descs': 'one', 'types': 'int'})
+    test_two = docstring.Docstring(parameters={'name': 'a', 'descs': 'one', 'signature': '(x, y)'})
+    test_one.inherit(test_two)
+    assert test_one.info['parameters'][0].name == 'a'
+    assert test_one.info['parameters'][0].descs == ['one']
+    assert test_one.info['parameters'][0].types == ['int']
