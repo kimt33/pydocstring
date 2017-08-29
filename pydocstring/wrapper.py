@@ -135,10 +135,10 @@ def docstring_recursive(obj, style='numpy', width=100, indent_level=0, tabsize=4
     for name in members.keys():
         # apply wrapper docstring to member
         inner_obj = docstring(getattr(obj, name), style=style, width=width,
-                              indent_level=indent_level, tabsize=tabsize, is_raw=is_raw)
+                              indent_level=indent_level+1, tabsize=tabsize, is_raw=is_raw)
         # recurse for all members of member
         inner_obj = docstring_recursive(inner_obj, style=style, width=width,
-                                        indent_level=indent_level, tabsize=tabsize, is_raw=is_raw)
+                                        indent_level=indent_level+1, tabsize=tabsize, is_raw=is_raw)
         # set new member
         setattr(obj, name, inner_obj)
 
