@@ -166,8 +166,10 @@ def test_tabbedinfo_make_numpy():
     # description + signature + types
     info = docstring.TabbedInfo('width', signature='param1, param2', types='int',
                                 descs='Maximum number of characters allowed in each width')
-    assert_raises(NotImplementedError, info.make_numpy, width=100, indent_level=0,
-                  tabsize=4)
+    assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
+            'width(param1, param2) : int\n'
+            '    Maximum number of characters allowed in each width')
+
 
 
 def test_docstring_make_numpy():

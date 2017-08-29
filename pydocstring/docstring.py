@@ -123,11 +123,6 @@ class Docstring:
             else:
                 raise TypeError('The contents of the section, {0}, must be a string'.format(key))
 
-            if key not in ['summary', 'extended', 'parameters', 'other parameters', 'attributes',
-                           'methods', 'returns', 'yields', 'raises', 'see also', 'notes',
-                           'references', 'examples']:
-                print('WARNING: keyword, {0}, is not compatible with the numpy write.'.format(key))
-
     # FIXME: all keywords that are not in numpy's doc sections will not be added
     def make_numpy(self, width=100, indent_level=0, tabsize=4, is_raw=False, include_quotes=True):
         """Returns the numpy docstring that corresponds to the Docstring instance.
@@ -204,6 +199,7 @@ class Docstring:
                     output += '\n{0}'.format(entry.make_numpy(width=width,
                                                               indent_level=indent_level,
                                                               tabsize=tabsize))
+        # TODO: check if some information is missing from the docstring
 
         if include_quotes:
             output += '\n{0}'.format(pydocstring.utils.wrap('"""', **wrap_kwargs))
@@ -425,28 +421,26 @@ class TabbedInfo:
                        'break_long_words': False}
 
         # first line
-        # NOTE: add subsequent indent just in case signature and types are long enough to wrap
-        if self.signature != '' and len(self.types) > 0:
-            raise NotImplementedError('NumPy documentation format does not support methods with '
-                                      'the type of the returned values.')
-
-        if len(self.types) == 0:
-            signature = self.signature if self.signature != '' else ''
-            output = pydocstring.utils.wrap('{0}{1}'.format(self.name, signature),
-                                            indent_level=indent_level,
-                                            added_indent=('', ' ' * (len(self.name) + 1)),
-                                            **wrap_kwargs)
-        elif len(self.types) == 1:
-            output = pydocstring.utils.wrap('{0} : {1}'.format(self.name, self.types[0]),
-                                            indent_level=indent_level,
-                                            added_indent=('', ' ' * (len(self.name) + 3)),
-                                            **wrap_kwargs)
+        # FIXME: this may violate max line width at some point (b/c wrapping name+signature does not
+        #        account for the width of the types)
+        output = pydocstring.utils.wrap('{0}{1}'.format(self.name, self.signature),
+                                        indent_level=indent_level,
+                                        added_indent=('', ' ' * (len(self.name) + 1)),
+                                        **wrap_kwargs)
+        len_lastline = len(output.split('\n')[-1])
+        if len(self.types) == 1:
+            output += pydocstring.utils.wrap(' : {1}'.format(output, self.types[0]),
+                                             indent_level=0,
+                                             added_indent=(' '*len_lastline, ' '*(len_lastline+3)),
+                                             remove_initial_indent=True,
+                                             **wrap_kwargs)
         elif len(self.types) > 1:
-            output = pydocstring.utils.wrap('{0} : {1}{2}{3}'.format(self.name, '{',
-                                                                     ', '.join(self.types), '}'),
-                                            indent_level=indent_level,
-                                            added_indent=('', ' ' * (len(self.name) + 4)),
-                                            **wrap_kwargs)
+            output += pydocstring.utils.wrap(' : {1}{2}{3}'.format(output, '{',
+                                                                   ', '.join(self.types), '}'),
+                                             indent_level=0,
+                                             added_indent=(' '*len_lastline, ' '*(len_lastline+4)),
+                                             remove_initial_indent=True,
+                                             **wrap_kwargs)
         # subsequent lines
         for description in self.descs:
             output += '\n{0}'.format(pydocstring.utils.wrap(description,
