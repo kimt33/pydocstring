@@ -1,3 +1,4 @@
+import inspect
 from functools import wraps
 from pydocstring.docstring import Docstring
 from pydocstring.numpy_docstring import parse_numpy
@@ -37,6 +38,7 @@ def kwarg_wrapper(wrapper):
     return new_wrapper
 
 
+# TODO: check that docstring is parsed properly
 @kwarg_wrapper
 def docstring(obj, style='numpy', width=100, indent_level=0, tabsize=4, is_raw=False):
     """Wrapper for converting docstring of an object from one format to another.
@@ -76,7 +78,9 @@ def docstring(obj, style='numpy', width=100, indent_level=0, tabsize=4, is_raw=F
     obj.__doc__ = doc.make_numpy(width=width, indent_level=indent_level, tabsize=tabsize,
                                  is_raw=is_raw, include_quotes=False)
     # store Docstring instance
-    obj._docstring = doc
+    # because attributes of property cannot be set
+    if not isinstance(obj, property):
+        obj._docstring = doc
 
     return obj
 
@@ -121,6 +125,10 @@ def docstring_recursive(obj, style='numpy', width=100, indent_level=0, tabsize=4
     # wrap self
     obj = docstring(obj, style=style, width=width, indent_level=indent_level, tabsize=tabsize,
                     is_raw=is_raw)
+
+    # property
+    if isinstance(obj, property):
+        return obj
 
     # wrap members
     members = extract_members(obj, recursive=False)
