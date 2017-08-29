@@ -137,9 +137,11 @@ def parse_numpy(docstring, contains_quotes=False):
                 if types is None:
                     types = []
                 elif re.search(r'\{.+\}', types):
-                    types = re.search(r'^\{(?:(.+?),\s*)*(.+?)\}$', types).groups()
+                    types = re.search(r'^\{((?:(.+?),\s*)*(.+?))\}$', types).group(1)
+                    types = re.split(r',\s*', types)
                 else:
-                    types = re.search(r'^(?:(.+?),\s*)*(.+?)$', types).groups()
+                    types = re.search(r'^((?:(.+?),\s*)*(.+?))$', types).group(1)
+                    types = re.split(r',\s*', types)
                 types = [i for i in types if i is not None]
 
                 # process documentation
