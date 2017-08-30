@@ -306,7 +306,7 @@ class Docstring:
         # merge together properties and methods with abstract counterpart
         other_info = {}
         for section, contents in other.info.items():
-            if 'abstract' in section:
+            if 'abstract' in section and section.replace('abstract ', '') in self.info:
                 other_info.setdefault(section.replace('abstract ', ''), []).extend(contents)
             else:
                 other_info[section] = contents
@@ -322,7 +322,6 @@ class Docstring:
                 entries = []
                 # maintain order
                 info_dict = collections.OrderedDict((i.name, i) for i in self.info[section])
-                print([i.name for i in contents])
                 for entry in contents:
                     try:
                         entries.append(info_dict.pop(entry.name))
