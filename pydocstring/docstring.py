@@ -303,8 +303,16 @@ class Docstring:
         -----
         Assumes that there is only one TabbedInfo per section that has a unique name.
         """
-        # inherit
+        # merge together properties and methods with abstract counterpart
+        other_info = {}
         for section, contents in other.info.items():
+            if 'abstract' in section:
+                other_info.setdefault(section.replace('abstract ', ''), []).extend(contents)
+            else:
+                other_info[section] = contents
+
+        # inherit
+        for section, contents in other_info.items():
             # if section is not present in self or if empty contents in section
             if section not in self.info or len(self.info[section]) == 0:
                 self.info[section] = contents
