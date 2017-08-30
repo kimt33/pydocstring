@@ -300,10 +300,9 @@ class Docstring:
         Assumes that there is only one TabbedInfo per section that has a unique name.
         """
         for section, contents in other.info.items():
-            # if section is not present in self
-            if section not in self.info:
+            # if section is not present in self or if empty contents in section
+            if section not in self.info or len(self.info[section]) == 0:
                 self.info[section] = contents
-
             # if contents are TabbedInfo
             elif all(isinstance(i, TabbedInfo) for i in self.info[section]):
                 # if given entry cannot be found in self
