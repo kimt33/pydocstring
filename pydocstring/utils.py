@@ -114,6 +114,49 @@ def wrap(text, width=100, indent_level=0, tabsize=4, edges=('', ''), added_inden
     return '\n'.join(output)
 
 
+def is_math(text):
+    """Check if the given text is a math equation in rst format.
+
+    Parameters
+    ----------
+    text : str
+        Text to check.
+
+    Returns
+    -------
+    is_math :bool
+        True if text is a math equation.
+        False otherwise.
+
+    """
+    re_math = re.compile(r'^\n*\.\.\s*math::\n*(?:\n?    .+)+\n?\n*$')
+    return bool(re_math.search(text))
+
+
+def extract_math(text):
+    """Extract multiline math equation from the text.
+
+    Parameters
+    ----------
+    text : str
+        Text from which the math equation is extracted.
+
+    Returns
+    -------
+    split_eqns : list of str
+        Text where the math equations have been separated from the rest of the string.
+
+    """
+    re_math = re.compile(r'\n*(\.\.\s*math::\n*(?:    .+\n?)+)\n*')
+    # split equations
+    split_eqns = re_math.split(text)
+    # remove empty lines
+    split_eqns = [lines for lines in split_eqns if lines != '']
+    # add newline
+    split_eqns = [re.sub(r'\n*$', '\n', lines) if is_math(lines) else lines for lines in split_eqns]
+    return split_eqns
+
+
 # FIXME: bug. see test
 # FIXME: add examples, make doc better
 # FIXME: seriously, this needs to not be recursive.

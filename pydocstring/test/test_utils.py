@@ -94,6 +94,26 @@ def test_wrap():
             '     7)'))
 
 
+def test_is_math():
+    """Test pydocstring.utils.is_math."""
+    assert pydocstring.utils.is_math('.. math::\n\n    x&=2\\\\    &=3')
+    assert pydocstring.utils.is_math('.. math::\n\n    x&=2\\\\    &=3\n')
+    assert pydocstring.utils.is_math('\n.. math::\n\n    x&=2\\\\    &=3\n\n\n')
+    assert not pydocstring.utils.is_math('x\n.. math::\n\n    x&=2\\\\    &=3\n\n\n')
+
+
+def test_extract_math():
+    """Test pydocstring.utils.extract_math."""
+    assert (pydocstring.utils.extract_math('.. math::\n\n    x &= 2\\\\\n    &= 3\n') ==
+            ['.. math::\n\n    x &= 2\\\\\n    &= 3\n'])
+    assert (pydocstring.utils.extract_math('x\n.. math::\n\n    x &= 2\\\\\n    &= 3\n') ==
+            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3\n'])
+    assert (pydocstring.utils.extract_math('x\n.. math::\n\n    x &= 2\\\\\n    &= 3\n\n\n') ==
+            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3\n'])
+    assert (pydocstring.utils.extract_math('x\n.. math::\n\n    x &= 2\\\\\n    &= 3\n\ny') ==
+            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3\n', 'y'])
+
+
 def test_layered_wrap():
     """Test pydocstring.utils.layered_wrap."""
     assert (pydocstring.utils.layered_wrap({('[', ']', False): ['hello']})
