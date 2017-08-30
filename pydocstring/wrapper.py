@@ -1,3 +1,4 @@
+import difflib
 import inspect
 from functools import wraps
 from pydocstring.docstring import Docstring
@@ -67,20 +68,36 @@ def docstring(obj, style='numpy', width=100, indent_level=0, tabsize=4, is_raw=F
     NotImplementedError
         If `style` is not 'numpy'
     """
+    if obj.__doc__ is None:
+        obj.__doc__ = ''
+
     if style == 'numpy':
-        doc = Docstring(**parse_numpy(obj.__doc__, contains_quotes=False))
+        docstring = Docstring(**parse_numpy(obj.__doc__, contains_quotes=False))
     elif style == 'code':
-        doc = obj.__doc__
+        docstring = obj.__doc__
     else:
         raise NotImplementedError('Only numpy and code (Docstring instance) style are supported at '
                                   'the moment.')
-    # over write docstring
-    obj.__doc__ = doc.make_numpy(width=width, indent_level=indent_level, tabsize=tabsize,
-                                 is_raw=is_raw, include_quotes=False)
+    # generate new docstring
+    new_doc = docstring.make_numpy(width=width, indent_level=indent_level, tabsize=tabsize,
+                                   is_raw=is_raw, include_quotes=False)
+    # compare to original
+    if style == 'numpy':
+        # FIXME: move to a better location
+        diff = list(difflib.context_diff(obj.__doc__.strip().split('\n'),
+                                         new_doc.strip().split('\n'),
+                                         fromfile='original-{0}'.format(obj),
+                                         tofile='generated-{0}'.format(obj)))
+        if len(diff) != 0:
+            print('WARNING: generated numpy docstring is different from the original')
+            print('\n'.join(diff))
+    # overwrite
+    obj.__doc__ = new_doc
+
     # store Docstring instance
     # because attributes of property cannot be set
     if not isinstance(obj, property):
-        obj._docstring = doc
+        obj._docstring = docstring
 
     return obj
 
