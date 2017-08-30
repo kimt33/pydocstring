@@ -1,3 +1,4 @@
+import collections
 import pydocstring.utils
 
 
@@ -284,7 +285,7 @@ class Docstring:
                                          **wrap_kwargs)
         return output
 
-    def inherit(self, other):
+    def inherit(self, other, to_end=False):
         """Inherit information from another Docstring instance.
 
         If the other docstring has something that the current docstring does not have, it is
@@ -294,21 +295,36 @@ class Docstring:
         ----------
         other : Docstring
             Docstring instance from which the information will be taken.
+        to_end : bool
+            Inherit the given docstring to the end of the current docstring.
+            By default, the provided docstring is inherited at the front of the current docstring.
 
         Notes
         -----
         Assumes that there is only one TabbedInfo per section that has a unique name.
         """
+        # inherit
         for section, contents in other.info.items():
             # if section is not present in self or if empty contents in section
             if section not in self.info or len(self.info[section]) == 0:
                 self.info[section] = contents
             # if contents are TabbedInfo
             elif all(isinstance(i, TabbedInfo) for i in self.info[section]):
-                # if given entry cannot be found in self
+                # retain order as best as possible
+                entries = []
+                # maintain order
+                info_dict = collections.OrderedDict((i.name, i) for i in self.info[section])
+                print([i.name for i in contents])
                 for entry in contents:
-                    if entry.name not in (i.name for i in self.info[section]):
-                        self.info[section].append(entry)
+                    try:
+                        entries.append(info_dict.pop(entry.name))
+                    except KeyError:
+                        entries.append(entry)
+
+                if to_end:
+                    self.info[section] = list(info_dict.values()) + entries
+                else:
+                    self.info[section] = entries + list(info_dict.values())
 
 
 # FIXME: rename
