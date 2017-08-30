@@ -1,5 +1,6 @@
 import re
-from pydocstring.utils import remove_indent
+from pydocstring.utils import remove_indent, extract_math, is_math
+
 
 
 def parse_numpy(docstring, contains_quotes=False):
@@ -77,14 +78,20 @@ def parse_numpy(docstring, contains_quotes=False):
 
     # if headers do not exist
     if re.search(r'(\w+)\n(-+)\n+', docstring) is None:
-        extended = re.split(r'\n\n+', docstring)
+        # split into blocks by math equations and multiple newlines
+        extended = [[lines] if is_math(lines) else re.split(r'\n\n+', lines)
+                    for lines in extract_math(docstring)]
+        extended = [line for lines in extended for line in lines]
         for block in extended:
-            # remove trailing newlines
-            block = re.sub(r'\n+$', '', block)
-            # remove quotes
-            block = re.sub(r'\n*{0}$'.format(quotes), '', block)
-            # replace newlines
-            block = block.replace('\n', ' ')
+            if block == '':
+                continue
+            if not is_math(block):
+                # remove quotes
+                block = re.sub(r'\n*{0}$'.format(quotes), '', block)
+                # remove trailing newlines
+                block = re.sub(r'\n+$', '', block)
+                # replace newlines
+                block = block.replace('\n', ' ')
 
             output.setdefault('extended', []).append(block)
         return output
@@ -152,14 +159,10 @@ def parse_numpy(docstring, contains_quotes=False):
                 # add period (only the last line is not missing the period)
                 descs = [line + '.' for line in descs[:-1]] + descs[-1:]
                 # extract equations
-                re_math = re.compile(r'(\.\.\s*math::\n*(?:\n?    .+)+)\n*')
-                descs = [re_math.split(line) for line in descs]
-                descs = [line for lines in descs for line in lines if line != '']
-                # add newline to math equation (only one is fine b/c newlines are added before each
-                # entry). two newlines are needed to compile the equation
+                descs = [line for lines in descs for line in extract_math(lines)]
                 # non math blocks will replace newlines with spaces.
-                descs = [line + '\n' if re_math.search(line) else line.replace('\n', ' ')
-                         for line in descs]
+                # FIXME: math regex is required here to check if entry is math equation
+                descs = [line if is_math(line) else line.replace('\n', ' ') for line in descs]
 
                 # store
                 output.setdefault(header, []).append({'name': name})

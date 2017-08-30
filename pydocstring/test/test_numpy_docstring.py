@@ -140,13 +140,21 @@ def test_parse_numpy_self():
 
 def test_parse_numpy_equations():
     """Test pydocstring.numpy_docstring.parse_numpy with equations."""
-    # contains equations
+    # equation in extended
     docstring = ('summary\n\n.. math::\n\n    \\frac{1}{2}')
     assert parse_numpy(docstring) == {'summary': 'summary',
-                                      'extended': ['.. math::', '    \\frac{1}{2}']}
+                                      'extended': ['.. math::\n\n    \\frac{1}{2}\n']}
+    docstring = ('summary\n\n'
+                 '.. math::\n\n'
+                 '    x &= 2\\\\\n'
+                 '    &= y\\\\\n')
+    assert parse_numpy(docstring) == {'summary': 'summary',
+                                      'extended': ['.. math::\n\n    x &= 2\\\\\n    &= y\\\\\n']}
+
+    # equation in parameter
+    # single line equation
     docstring = ('summary\n\nParameters\n----------\na : float\n    .. math::\n\n    '
                  '    \\frac{1}{2}')
-    # single line equation
     assert parse_numpy(docstring) == {'summary': 'summary',
                                       'parameters': [{'name': 'a',
                                                       'types': ['float'],
