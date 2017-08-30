@@ -105,13 +105,13 @@ def test_is_math():
 def test_extract_math():
     """Test pydocstring.utils.extract_math."""
     assert (pydocstring.utils.extract_math('.. math::\n\n    x &= 2\\\\\n    &= 3\n') ==
-            ['.. math::\n\n    x &= 2\\\\\n    &= 3\n'])
+            ['.. math::\n\n    x &= 2\\\\\n    &= 3'])
     assert (pydocstring.utils.extract_math('x\n.. math::\n\n    x &= 2\\\\\n    &= 3\n') ==
-            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3\n'])
+            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3'])
     assert (pydocstring.utils.extract_math('x\n.. math::\n\n    x &= 2\\\\\n    &= 3\n\n\n') ==
-            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3\n'])
+            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3'])
     assert (pydocstring.utils.extract_math('x\n.. math::\n\n    x &= 2\\\\\n    &= 3\n\ny') ==
-            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3\n', 'y'])
+            ['x', '.. math::\n\n    x &= 2\\\\\n    &= 3', 'y'])
 
 
 def test_layered_wrap():

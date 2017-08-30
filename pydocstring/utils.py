@@ -99,6 +99,7 @@ def wrap(text, width=100, indent_level=0, tabsize=4, edges=('', ''), added_inden
     num_indent = [len(kwargs['initial_indent']), len(kwargs['subsequent_indent'])]
 
     lines = textwrap.fill(text, **kwargs).split('\n')
+
     if remove_initial_indent:
         # remove the initial indent
         lines[0] = lines[0][num_indent[0]:]
@@ -152,8 +153,8 @@ def extract_math(text):
     split_eqns = re_math.split(text)
     # remove empty lines
     split_eqns = [lines for lines in split_eqns if lines != '']
-    # add newline
-    split_eqns = [re.sub(r'\n*$', '\n', lines) if is_math(lines) else lines for lines in split_eqns]
+    # remove trailing newline
+    split_eqns = [re.sub(r'\n*$', '', lines) if is_math(lines) else lines for lines in split_eqns]
     return split_eqns
 
 
