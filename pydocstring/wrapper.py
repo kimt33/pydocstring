@@ -206,6 +206,26 @@ def docstring_class(obj, style='numpy', width=100, indent_level=0, tabsize=4,
     obj = docstring_recursive(obj, style=style, width=width, indent_level=indent_level,
                               tabsize=tabsize, is_raw=is_raw)
 
+    # inherit from parents
+    for name, member in extract_members(obj).items():
+        try:
+            parent_member = getattr(super(obj.__class__, obj), name)
+            # the following is placed here rather than an else block b/c if parent does not have
+            # _docstring attribute, AtributeError is also raised
+            member._docstring.inherit(parent_member)
+        except AttributeError:
+            continue
+        else:
+            member.__doc__ = member._docstring.make_numpy(width=width, indent_level=indent_level,
+                                                          tabsize=tabsize, is_raw=is_raw,
+                                                          include_quotes=False)
+
+    for parent in obj.__bases__:
+        if not hasattr(parent, '_docstring'):
+            continue
+        # FIXME: need to check if multiple parents have conflicting docstrings
+        obj._docstring.inherit(parent._docstring)
+
     # inherit docstring its contents
     for name, member in extract_members(obj).items():
         # because we cannot change the attributes of a property, it needs to be parsed and then
@@ -249,25 +269,6 @@ def docstring_class(obj, style='numpy', width=100, indent_level=0, tabsize=4,
 
         method_doc = Docstring(**{section: contents})
         obj._docstring.inherit(method_doc)
-
-    # inherit from parents
-    for name, member in extract_members(obj).items():
-        try:
-            parent_member = getattr(super(obj.__class__, obj), name)
-            # the following is placed here rather than an else block b/c if parent does not have
-            # _docstring attribute, AtributeError is also raised
-            doc.inherit(parent_member)
-        except AttributeError:
-            continue
-        else:
-            member.__doc__ = doc.make_numpy(width=width, indent_level=indent_level,
-                                            tabsize=tabsize, is_raw=is_raw, include_quotes=False)
-
-    for parent in obj.__bases__:
-        if not hasattr(parent, '_docstring'):
-            continue
-        # FIXME: need to check if multiple parents have conflicting docstrings
-        obj._docstring.inherit(parent._docstring)
 
     obj.__doc__ = obj._docstring.make_numpy(width=width, indent_level=indent_level,
                                             tabsize=tabsize, is_raw=is_raw, include_quotes=False)
