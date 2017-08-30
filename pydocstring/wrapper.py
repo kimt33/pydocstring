@@ -226,7 +226,7 @@ def docstring_class(obj, style='numpy', width=100, indent_level=0, tabsize=4,
             except AttributeError as error:
                 continue
             else:
-                member_docstring.inherit(parent_docstring)
+                member_docstring.inherit(parent_docstring, to_end=False)
                 if hasattr(member, '_docstring'):
                     member._docstring = member_docstring
                 member.__doc__ = member_docstring.make_numpy(width=width,
@@ -235,13 +235,8 @@ def docstring_class(obj, style='numpy', width=100, indent_level=0, tabsize=4,
                                                              is_raw=is_raw,
                                                              include_quotes=False)
 
-    for parent in obj.__bases__:
-        if not hasattr(parent, '_docstring'):
-            continue
-        # FIXME: need to check if multiple parents have conflicting docstrings
-        obj._docstring.inherit(parent._docstring)
-
     # inherit docstring its contents
+    member_doc = Docstring()
     for name, member in extract_members(obj).items():
         # because we cannot change the attributes of a property, it needs to be parsed and then
         # put back together...
@@ -282,8 +277,14 @@ def docstring_class(obj, style='numpy', width=100, indent_level=0, tabsize=4,
         elif hasattr(obj, name):
             section = 'attributes'
 
-        method_doc = Docstring(**{section: contents})
-        obj._docstring.inherit(method_doc)
+        member_doc.inherit(Docstring(**{section: contents}), to_end=True)
+    obj._docstring.inherit(member_doc, to_end=False)
+
+    for parent in obj.__bases__:
+        if not hasattr(parent, '_docstring'):
+            continue
+        # FIXME: need to check if multiple parents have conflicting docstrings
+        obj._docstring.inherit(parent._docstring, to_end=False)
 
     obj.__doc__ = obj._docstring.make_numpy(width=width, indent_level=indent_level,
                                             tabsize=tabsize, is_raw=is_raw, include_quotes=False)

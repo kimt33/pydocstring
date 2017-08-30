@@ -171,7 +171,6 @@ def test_tabbedinfo_make_numpy():
             '    Maximum number of characters allowed in each width')
 
 
-
 def test_docstring_make_numpy():
     """Tests pydocstring.docstring.Docstring.make_numpy."""
     # summary
@@ -536,10 +535,10 @@ def test_docstring_inherit():
     test_one = docstring.Docstring(parameters={'name': 'a', 'descs': 'one'})
     test_two = docstring.Docstring(parameters={'name': 'b', 'descs': 'two'})
     test_one.inherit(test_two)
-    assert test_one.info['parameters'][0].name == 'a'
-    assert test_one.info['parameters'][0].descs == ['one']
-    assert test_one.info['parameters'][1].name == 'b'
-    assert test_one.info['parameters'][1].descs == ['two']
+    assert test_one.info['parameters'][0].name == 'b'
+    assert test_one.info['parameters'][0].descs == ['two']
+    assert test_one.info['parameters'][1].name == 'a'
+    assert test_one.info['parameters'][1].descs == ['one']
 
     test_one = docstring.Docstring(parameters={'name': 'a', 'descs': 'one'})
     test_two = docstring.Docstring(parameters={'name': 'a', 'descs': 'two'})
