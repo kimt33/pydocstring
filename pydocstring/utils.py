@@ -115,6 +115,50 @@ def wrap(text, width=100, indent_level=0, tabsize=4, edges=('', ''), added_inden
     return '\n'.join(output)
 
 
+def multi_wrap(multiline, width=100, indent_level=0, tabsize=4):
+    """Wrap multiple lines of text.
+
+    Preserving the newline, wraps each line so that the subsequent lines are indented by the same
+    amount as the leading whitespace.
+
+    Parameters
+    ----------
+    multiline : str
+        String with multiple lines (newlines).
+
+    Returns
+    -------
+    wrapped_multiline : str
+        Multiple lines wrapped over each newline.
+
+    Examples
+    --------
+
+    """
+    kwargs = {}
+    kwargs['expand_tabs'] = True
+    kwargs['replace_whitespace'] = False
+    kwargs['drop_whitespace'] = True
+    kwargs['break_long_words'] = False
+    kwargs['tabsize'] = tabsize
+    kwargs['width'] = width
+
+    tab = indent_level * tabsize * ' '
+    # divide by newline
+    multiline = multiline.split('\n')
+    # find leading whitespace
+    whitespace = [len(re.search(r'^(\s*).+', line).group(1)) for line in multiline]
+    # wrap each line
+    wrapped_multiline = []
+    for line, num_space in zip(multiline, whitespace):
+        wrapped_multiline.append(textwrap.fill(line,
+                                               initial_indent=tab,
+                                               subsequent_indent=tab + num_space*' ',
+                                               **kwargs))
+
+    return '\n'.join(wrapped_multiline)
+
+
 def is_math(text):
     """Check if the given text is a math equation in rst format.
 
