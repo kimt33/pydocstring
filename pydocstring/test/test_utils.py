@@ -97,13 +97,13 @@ def test_wrap():
 def test_multi_wrap():
     """Test pydocstring.utils.multi_wrap."""
     assert (pydocstring.utils.multi_wrap('a b c d \n  a b c d \n    a b c d ', width=6) ==
-            'a b c\nd\n  a b\n  c d\n    a\n    b\n    c\n    d\n')
+            'a b c\nd\n  a b\n  c d\n    a\n    b\n    c\n    d')
     assert (pydocstring.utils.multi_wrap('a b c d \n  a b c d \n    a b c d ', width=8, tabsize=2,
                                          indent_level=1) ==
-            '  a b c\n  d\n    a b\n    c d\n      a\n      b\n      c\n      d\n')
+            '  a b c\n  d\n    a b\n    c d\n      a\n      b\n      c\n      d')
     assert (pydocstring.utils.multi_wrap('a b c d \n  a b c d \n    a b c d ', width=8, tabsize=1,
                                          indent_level=2) ==
-            '  a b c\n  d\n    a b\n    c d\n      a\n      b\n      c\n      d\n')
+            '  a b c\n  d\n    a b\n    c d\n      a\n      b\n      c\n      d')
 
 
 def test_is_math():

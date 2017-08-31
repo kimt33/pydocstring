@@ -156,8 +156,8 @@ def multi_wrap(multiline, width=100, indent_level=0, tabsize=4):
                                                subsequent_indent=tab + num_space*' ',
                                                **kwargs))
     wrapped_multiline = '\n'.join(wrapped_multiline)
-    # add newline at the end
-    wrapped_multiline = re.sub('\n*$', '\n', wrapped_multiline)
+    # there should be no newline at the end b/c drop_whitespace is True (but just in case)
+    wrapped_multiline = re.sub('\n*$', '', wrapped_multiline)
     return wrapped_multiline
 
 
