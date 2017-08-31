@@ -121,25 +121,25 @@ def test_tabbedinfo_make_numpy():
                                 descs='Maximum number of characters allowed in each width')
     assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
             'width\n'
-            '    Maximum number of characters allowed in each width')
+            '    Maximum number of characters allowed in each width\n')
     # description + indentation
     info = docstring.TabbedInfo('width',
                                 descs='Maximum number of characters allowed in each width')
     assert (info.make_numpy(width=35, indent_level=0, tabsize=4) ==
             'width\n'
             '    Maximum number of characters\n'
-            '    allowed in each width')
+            '    allowed in each width\n')
     # description + types
     info = docstring.TabbedInfo('width', types='int',
                                 descs='Maximum number of characters allowed in each width')
     assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
             'width : int\n'
-            '    Maximum number of characters allowed in each width')
+            '    Maximum number of characters allowed in each width\n')
     info = docstring.TabbedInfo('width', types=['int', 'float'],
                                 descs='Maximum number of characters allowed in each width')
     assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
             'width : {int, float}\n'
-            '    Maximum number of characters allowed in each width')
+            '    Maximum number of characters allowed in each width\n')
     # description + types + indentation
     info = docstring.TabbedInfo('width', types=['int', 'float', 'np.int64'],
                                 descs='Maximum number of characters allowed in each width')
@@ -147,13 +147,13 @@ def test_tabbedinfo_make_numpy():
             '    width : {int, float, np.int64}\n'
             '        Maximum number of\n'
             '        characters allowed in each\n'
-            '        width')
+            '        width\n')
     # description + signature
     info = docstring.TabbedInfo('width', signature='param1, param2',
                                 descs='Maximum number of characters allowed in each width')
     assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
             'width(param1, param2)\n'
-            '    Maximum number of characters allowed in each width')
+            '    Maximum number of characters allowed in each width\n')
     # description + signature + indentation
     info = docstring.TabbedInfo('width', signature='param1, param2, param3, param4',
                                 descs='Maximum number of characters allowed in each width')
@@ -162,13 +162,13 @@ def test_tabbedinfo_make_numpy():
             '          param4)\n'
             '        Maximum number of\n'
             '        characters allowed in each\n'
-            '        width')
+            '        width\n')
     # description + signature + types
     info = docstring.TabbedInfo('width', signature='param1, param2', types='int',
                                 descs='Maximum number of characters allowed in each width')
     assert (info.make_numpy(width=100, indent_level=0, tabsize=4) ==
             'width(param1, param2) : int\n'
-            '    Maximum number of characters allowed in each width')
+            '    Maximum number of characters allowed in each width\n')
 
 
 def test_docstring_make_numpy():
@@ -178,14 +178,12 @@ def test_docstring_make_numpy():
         summary='something happening in this thing, it really happens oh yes it does the thing',
     )
     assert (test.make_numpy(width=100, indent_level=0, tabsize=4) ==
-            '"""something happening in this thing, it really happens oh yes it does the thing\n"""')
+            '"""something happening in this thing, it really happens oh yes it does the thing"""')
 
     # extended
     test = docstring.Docstring(extended='dasfsdf')
-    # assert_raises(NotImplementedError, test.make_numpy, width=100, indent_level=0,
-    #               tabsize=4)
     assert (test.make_numpy(width=100, indent_level=0, tabsize=4) ==
-            '"""\n\ndasfsdf\n"""')
+            '"""\n\ndasfsdf\n\n"""')
 
     # parameters, attributes, methods, returns, yields, raises, other parameters, see also
     for header in ['parameters', 'attributes', 'methods', 'returns', 'yields', 'raises',
@@ -202,7 +200,7 @@ def test_docstring_make_numpy():
                 '{1}\n'
                 'something : {2}\n'
                 '    something happening in this thing, it really happens oh yes it\n'
-                '    does the thing\n"""'.format(header.title(), '-' * len(header),
+                '    does the thing\n\n"""'.format(header.title(), '-' * len(header),
                                                  '{sometype1, sometype2}'))
         # with signature and description
         test = docstring.Docstring(**{header: {'name': 'something',
@@ -216,7 +214,7 @@ def test_docstring_make_numpy():
                 '{1}\n'
                 'something(a, b, c)\n'
                 '    something happening in this thing, it really happens oh yes it\n'
-                '    does the thing\n"""'.format(header.title(), '-' * len(header),))
+                '    does the thing\n\n"""'.format(header.title(), '-' * len(header),))
         # with description
         test = docstring.Docstring(**{header: {'name': 'something',
                                                'descs': ('something happening in this thing, it '
@@ -228,7 +226,7 @@ def test_docstring_make_numpy():
                 '{1}\n'
                 'something\n'
                 '    something happening in this thing, it really happens oh yes it\n'
-                '    does the thing\n"""'.format(header.title(), '-' * len(header),))
+                '    does the thing\n\n"""'.format(header.title(), '-' * len(header),))
 
     # example function
     test = docstring.Docstring(
@@ -259,7 +257,7 @@ def test_docstring_make_numpy():
             'NotImplementedError\n\n'
             'Notes\n'
             '-----\n'
-            'This function actually does nothing\n'
+            'This function actually does nothing\n\n'
             '"""')
 
     # example class
@@ -291,7 +289,7 @@ def test_docstring_make_numpy():
             'This class actually does nothing\n\n'
             'References\n'
             '----------\n'
-            '.. [1] some reference\n'
+            '.. [1] some reference\n\n'
             '"""')
 
 
@@ -569,13 +567,25 @@ def test_docstring_make_numpy_equations():
                                  '    \sum_{\mathbf{m} \in S_{\mathrm{FCI}}} '
                                  'c_{\mathbf{m}} \ket{\mathbf{m}}\n\n'
                                  '"""')
+    test = docstring.Docstring(**{'extended': ('.. math::\n'
+                                               '    \ket{\Psi_{\mathrm{FCI}}} =\n'
+                                               '    \sum_{\mathbf{m} \in S_{\mathrm{FCI}}} '
+                                               'c_{\mathbf{m}} \ket{\mathbf{m}}',
+                                               'something')})
+    assert test.make_numpy() == ('"""\n\n'
+                                 '.. math::\n'
+                                 '    \ket{\Psi_{\mathrm{FCI}}} =\n'
+                                 '    \sum_{\mathbf{m} \in S_{\mathrm{FCI}}} '
+                                 'c_{\mathbf{m}} \ket{\mathbf{m}}\n\n'
+                                 'something\n\n'
+                                 '"""')
 
     test = docstring.Docstring(**{'parameters': {'name': 'x',
                                                  'descs': ('.. math::\n'
                                                            '    \ket{\Psi_{\mathrm{FCI}}} =\n'
                                                            '    \sum_{\mathbf{m} \in '
                                                            'S_{\mathrm{FCI}}} c_{\mathbf{m}} '
-                                                           '\ket{\mathbf{m}}\n')}})
+                                                           '\ket{\mathbf{m}}')}})
     assert test.make_numpy() == ('"""\n\n'
                                  'Parameters\n'
                                  '----------\n'
@@ -600,5 +610,5 @@ def test_docstring_make_numpy_equations():
                                  '        \ket{\Psi_{\mathrm{FCI}}} =\n'
                                  '        \sum_{\mathbf{m} \in S_{\mathrm{FCI}}} '
                                  'c_{\mathbf{m}} \ket{\mathbf{m}}\n\n'
-                                 '    something\n'
+                                 '    something\n\n'
                                  '"""')

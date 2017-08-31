@@ -1,3 +1,4 @@
+import re
 import collections
 import pydocstring.utils
 
@@ -152,30 +153,32 @@ class Docstring:
 
         # summary
         if 'summary' not in self.info:
-            pass
-            # NOTE: is this too harsh?
-            # raise NotImplementedError('Summary needs to be provided to construct the numpy'
-            #                           ' documentation.')
+            output += '\n\n'
         elif len(self.info['summary']) < (width
                                           - (6 if len(self.info) == 1 else 3)
                                           - (1 if is_raw else 0)):
             output += self.info['summary']
+            if len(self.info) != 1:
+                output += '\n\n'
         elif len(self.info['summary']) < width:
-            output += '\n{0}'.format(pydocstring.utils.wrap(self.info['summary'], **wrap_kwargs))
+            output += '\n'
+            output += pydocstring.utils.wrap(self.info['summary'], **wrap_kwargs)
+            output += '\n\n'
         else:
             print('WARNING: summary is too long for the given indent level and line length.')
             output += self.info['summary']
+            output += '\n\n'
 
         # extended
         # FIXME: textwrap is not terribly reliable
         # FIXME: multiline string will contain all the tabs/spaces. these need to be removed
         if 'extended' in self.info:
             for paragraph in self.info['extended']:
-                output += '\n\n'
                 if pydocstring.utils.is_math(paragraph):
                     output += pydocstring.utils.multi_wrap(paragraph, **wrap_kwargs)
                 else:
                     output += pydocstring.utils.wrap(paragraph, **wrap_kwargs)
+                output += '\n\n'
 
         # set the order of documentation construction
         sections = ['parameters', 'other parameters', 'attributes', 'properties',
@@ -185,30 +188,35 @@ class Docstring:
             if section not in self.info:
                 continue
             # create header
-            output += '\n\n{0}\n{1}'.format(pydocstring.utils.wrap(section.title(), **wrap_kwargs),
-                                            pydocstring.utils.wrap('-'*len(section), **wrap_kwargs))
+            output += '{0}\n{1}\n'.format(pydocstring.utils.wrap(section.title(), **wrap_kwargs),
+                                          pydocstring.utils.wrap('-'*len(section), **wrap_kwargs))
 
             for i, entry in enumerate(self.info[section]):
                 if section == 'references':
-                    output += '\n.. '
+                    output += '.. '
                     # add three spaces for subsequent lines to account for '.. '
                     output += pydocstring.utils.wrap('[{0}] {1}'.format(i+1, entry),
                                                      added_indent='   ', remove_initial_indent=True,
                                                      **wrap_kwargs)
+                    output += '\n'
                 elif isinstance(entry, str):
-                    output += '\n\n' if i > 0 else '\n'
                     if pydocstring.utils.is_math(entry):
                         output += pydocstring.utils.multi_wrap(entry, **wrap_kwargs)
                     else:
                         output += pydocstring.utils.wrap(entry, **wrap_kwargs)
+                    output += '\n\n'
                 else:
-                    output += '\n{0}'.format(entry.make_numpy(width=width,
-                                                              indent_level=indent_level,
-                                                              tabsize=tabsize))
+                    output += entry.make_numpy(width=width, indent_level=indent_level,
+                                               tabsize=tabsize)
+            if not isinstance(entry, str):
+                output += '\n'
         # TODO: check if some information is missing from the docstring
 
+        # get appropriate number of new lines
+        output = re.sub(r'\n+$', '\n\n', output)
+
         if include_quotes:
-            output += '\n{0}'.format(pydocstring.utils.wrap('"""', **wrap_kwargs))
+            output += pydocstring.utils.wrap('"""', **wrap_kwargs)
         return output
 
     # FIXME: arbitrary section headers are excluded
@@ -466,14 +474,16 @@ class TabbedInfo:
                                              added_indent=(' '*len_lastline, ' '*(len_lastline+4)),
                                              remove_initial_indent=True,
                                              **wrap_kwargs)
+        output += '\n'
+
         # subsequent lines
         for description in self.descs:
-            output += '\n'
             if pydocstring.utils.is_math(description):
                 output += pydocstring.utils.multi_wrap(description,  indent_level=indent_level+1,
                                                        **wrap_kwargs)
+                output += '\n'
             else:
                 output += pydocstring.utils.wrap(description, indent_level=indent_level+1,
                                                  **wrap_kwargs)
-
+            output += '\n'
         return output

@@ -21,7 +21,7 @@ def test_wrapper_docstring_on_func():
                             'Parameters\n'
                             '----------\n'
                             'x : int\n'
-                            '    Something.')
+                            '    Something.\n\n')
     assert hasattr(test, '_docstring')
     assert isinstance(test._docstring, pydocstring.docstring.Docstring)
     assert test._docstring.make_numpy(include_quotes=False) == test.__doc__
@@ -50,7 +50,7 @@ def test_wrapper_docstring_on_class():
                             'Attributes\n'
                             '----------\n'
                             'x : int\n'
-                            '    Something.')
+                            '    Something.\n\n')
     assert hasattr(test, '_docstring')
     assert isinstance(test._docstring, pydocstring.docstring.Docstring)
     assert test._docstring.make_numpy(include_quotes=False) == test.__doc__
@@ -108,7 +108,7 @@ def test_wrapper_docstring_recursive_on_class():
 
     test = Test()
 
-    assert test.__doc__ == 'Some test docstring.\n\nTake care of gaps'
+    assert test.__doc__ == 'Some test docstring.\n\nTake care of gaps\n\n'
     assert hasattr(test, '_docstring')
     assert isinstance(test._docstring, pydocstring.docstring.Docstring)
     assert test._docstring.make_numpy(include_quotes=False) == test.__doc__
@@ -124,7 +124,7 @@ def test_wrapper_docstring_on_func_kwargs():
         Test extended."""
         pass
 
-    assert test.__doc__ == 'Test docstring.\n\n    Test extended.'
+    assert test.__doc__ == 'Test docstring.\n\n    Test extended.\n\n'
     assert hasattr(test, '_docstring')
     assert isinstance(test._docstring, pydocstring.docstring.Docstring)
     assert test._docstring.make_numpy(include_quotes=False, indent_level=1) == test.__doc__
@@ -142,7 +142,7 @@ def test_wrapper_docstring_on_class_kwargs():
         pass
     test = Test()
 
-    assert test.__doc__ == 'Test docstring.\n\n    Test extended.'
+    assert test.__doc__ == 'Test docstring.\n\n    Test extended.\n\n'
     assert hasattr(test, '_docstring')
     assert isinstance(test._docstring, pydocstring.docstring.Docstring)
     assert test._docstring.make_numpy(include_quotes=False, indent_level=1) == test.__doc__
@@ -172,7 +172,7 @@ def test_wrapper_docstring_recursive_on_func_kwargs():
     # calling the wrapper
     test = pydocstring.wrapper.docstring_recursive(test, indent_level=1)
 
-    docstrings = {test: 'Test docstring.\n\n    Test extended.',
+    docstrings = {test: 'Test docstring.\n\n    Test extended.\n\n',
                   test.test2: 'Another docstring.',
                   test.test3: 'One more docstring.'}
     for obj, doc in docstrings.items():
@@ -198,7 +198,7 @@ def test_wrapper_docstring_recursive_on_class_kwargs():
             pass
     test = Test()
 
-    assert test.__doc__ == 'Test docstring.\n\n    Test extended.'
+    assert test.__doc__ == 'Test docstring.\n\n    Test extended.\n\n'
     assert hasattr(test, '_docstring')
     assert isinstance(test._docstring, pydocstring.docstring.Docstring)
     assert test._docstring.make_numpy(include_quotes=False, indent_level=1) == test.__doc__
@@ -227,7 +227,7 @@ def test_wrapper_docstring_class():
                             'Methods\n'
                             '-------\n'
                             'x()\n'
-                            '    Another docstring.')
+                            '    Another docstring.\n\n')
 
     # property
     @pydocstring.wrapper.docstring_class
@@ -245,7 +245,7 @@ def test_wrapper_docstring_class():
                             'Properties\n'
                             '----------\n'
                             'x\n'
-                            '    Another docstring.')
+                            '    Another docstring.\n\n')
 
     # abstract method
     @pydocstring.wrapper.docstring_class
@@ -262,7 +262,7 @@ def test_wrapper_docstring_class():
                               'Abstract Methods\n'
                               '----------------\n'
                               'x()\n'
-                              '    Another docstring.')
+                              '    Another docstring.\n\n')
 
     # abstract properties
     @pydocstring.wrapper.docstring_class
@@ -279,7 +279,7 @@ def test_wrapper_docstring_class():
                               'Abstract Properties\n'
                               '-------------------\n'
                               'x\n'
-                              '    Another docstring.')
+                              '    Another docstring.\n\n')
 
     # inheritance from parent
     @pydocstring.wrapper.docstring_class
@@ -302,4 +302,4 @@ def test_wrapper_docstring_class():
                             'Methods\n'
                             '-------\n'
                             'x()\n'
-                            '    Another docstring.')
+                            '    Another docstring.\n\n')
