@@ -171,7 +171,11 @@ class Docstring:
         # FIXME: multiline string will contain all the tabs/spaces. these need to be removed
         if 'extended' in self.info:
             for paragraph in self.info['extended']:
-                output += '\n\n{0}'.format(pydocstring.utils.wrap(paragraph, **wrap_kwargs))
+                output += '\n\n'
+                if pydocstring.utils.is_math(paragraph):
+                    output += pydocstring.utils.multi_wrap(paragraph, **wrap_kwargs)
+                else:
+                    output += pydocstring.utils.wrap(paragraph, **wrap_kwargs)
 
         # set the order of documentation construction
         sections = ['parameters', 'other parameters', 'attributes', 'properties',
@@ -192,10 +196,11 @@ class Docstring:
                                                      added_indent='   ', remove_initial_indent=True,
                                                      **wrap_kwargs)
                 elif isinstance(entry, str):
-                    # number of newlines before the block
-                    num_spaces = 1 if i > 0 else 0
-                    output += '{0}\n{1}'.format('\n'*num_spaces,
-                                                pydocstring.utils.wrap(entry, **wrap_kwargs))
+                    output += '\n\n' if i > 0 else '\n'
+                    if pydocstring.utils.is_math(entry):
+                        output += pydocstring.utils.multi_wrap(entry, **wrap_kwargs)
+                    else:
+                        output += pydocstring.utils.wrap(entry, **wrap_kwargs)
                 else:
                     output += '\n{0}'.format(entry.make_numpy(width=width,
                                                               indent_level=indent_level,
@@ -438,9 +443,7 @@ class TabbedInfo:
         tabsize : int
             Number of spaces that corresponds to a tab
         """
-        wrap_kwargs = {'width': width, 'expand_tabs': True, 'tabsize': tabsize,
-                       'replace_whitespace': False, 'drop_whitespace': True,
-                       'break_long_words': False}
+        wrap_kwargs = {'width': width, 'tabsize': tabsize}
 
         # first line
         # FIXME: this may violate max line width at some point (b/c wrapping name+signature does not
@@ -465,8 +468,12 @@ class TabbedInfo:
                                              **wrap_kwargs)
         # subsequent lines
         for description in self.descs:
-            output += '\n{0}'.format(pydocstring.utils.wrap(description,
-                                                            indent_level=indent_level + 1,
-                                                            **wrap_kwargs))
+            output += '\n'
+            if pydocstring.utils.is_math(description):
+                output += pydocstring.utils.multi_wrap(description,  indent_level=indent_level+1,
+                                                       **wrap_kwargs)
+            else:
+                output += pydocstring.utils.wrap(description, indent_level=indent_level+1,
+                                                 **wrap_kwargs)
 
         return output

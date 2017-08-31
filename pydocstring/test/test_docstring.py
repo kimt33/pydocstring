@@ -552,3 +552,53 @@ def test_docstring_inherit():
     assert test_one.info['parameters'][0].name == 'a'
     assert test_one.info['parameters'][0].descs == ['one']
     assert test_one.info['parameters'][0].types == ['int']
+
+
+def test_docstring_make_numpy_equations():
+    """Test pydocstring.docstring.Docstring.make_numpy with equations."""
+    test = docstring.Docstring(**{'extended': '.. math::\n\n    x=2'})
+    assert test.make_numpy() == '"""\n\n.. math::\n\n    x=2\n\n"""'
+
+    test = docstring.Docstring(**{'extended': ('.. math::\n'
+                                               '    \ket{\Psi_{\mathrm{FCI}}} =\n'
+                                               '    \sum_{\mathbf{m} \in S_{\mathrm{FCI}}} '
+                                               'c_{\mathbf{m}} \ket{\mathbf{m}}\n')})
+    assert test.make_numpy() == ('"""\n\n'
+                                 '.. math::\n'
+                                 '    \ket{\Psi_{\mathrm{FCI}}} =\n'
+                                 '    \sum_{\mathbf{m} \in S_{\mathrm{FCI}}} '
+                                 'c_{\mathbf{m}} \ket{\mathbf{m}}\n\n'
+                                 '"""')
+
+    test = docstring.Docstring(**{'parameters': {'name': 'x',
+                                                 'descs': ('.. math::\n'
+                                                           '    \ket{\Psi_{\mathrm{FCI}}} =\n'
+                                                           '    \sum_{\mathbf{m} \in '
+                                                           'S_{\mathrm{FCI}}} c_{\mathbf{m}} '
+                                                           '\ket{\mathbf{m}}\n')}})
+    assert test.make_numpy() == ('"""\n\n'
+                                 'Parameters\n'
+                                 '----------\n'
+                                 'x\n'
+                                 '    .. math::\n'
+                                 '        \ket{\Psi_{\mathrm{FCI}}} =\n'
+                                 '        \sum_{\mathbf{m} \in S_{\mathrm{FCI}}} '
+                                 'c_{\mathbf{m}} \ket{\mathbf{m}}\n\n'
+                                 '"""')
+    test = docstring.Docstring(**{'parameters': {'name': 'x',
+                                                 'descs': ('.. math::\n'
+                                                           '    \ket{\Psi_{\mathrm{FCI}}} =\n'
+                                                           '    \sum_{\mathbf{m} \in '
+                                                           'S_{\mathrm{FCI}}} c_{\mathbf{m}} '
+                                                           '\ket{\mathbf{m}}',
+                                                           'something')}})
+    assert test.make_numpy() == ('"""\n\n'
+                                 'Parameters\n'
+                                 '----------\n'
+                                 'x\n'
+                                 '    .. math::\n'
+                                 '        \ket{\Psi_{\mathrm{FCI}}} =\n'
+                                 '        \sum_{\mathbf{m} \in S_{\mathrm{FCI}}} '
+                                 'c_{\mathbf{m}} \ket{\mathbf{m}}\n\n'
+                                 '    something\n'
+                                 '"""')
