@@ -101,12 +101,27 @@ def parse_numpy(docstring, contains_quotes=False):
     # check for extended summary
     if re.search(r'^-+$', split_docstring[2]):
         extended, *split_docstring = split_docstring
-        # add extended
-        extended = [block for block in re.split(r'\n\n+', extended) if block != '']
-        # remove newlines
-        extended = [block.replace('\n', ' ') for block in extended]
-        if extended != []:
-            output['extended'] = extended
+        # FIXME: repeated code
+        # extract math and split blocks
+        extended = [[lines] if is_math(lines) else re.split(r'\n\n+', lines)
+                    for lines in extract_math(extended)]
+        extended = [line for lines in extended for line in lines]
+        # process blocks
+        processed_extended = []
+        for block in extended:
+            if block == '':
+                continue
+            if not is_math(block):
+                # remove quotes
+                block = re.sub(r'\n*{0}$'.format(quotes), '', block)
+                # remove trailing newlines
+                block = re.sub(r'\n+$', '', block)
+                # replace newlines
+                block = block.replace('\n', ' ')
+            processed_extended.append(block)
+
+        if processed_extended != []:
+            output['extended'] = processed_extended
 
     for header, lines, contents in zip(split_docstring[0::3],
                                        split_docstring[1::3],
@@ -161,8 +176,8 @@ def parse_numpy(docstring, contains_quotes=False):
                 # extract equations
                 descs = [line for lines in descs for line in extract_math(lines)]
                 # non math blocks will replace newlines with spaces.
-                # FIXME: math regex is required here to check if entry is math equation
-                descs = [line if is_math(line) else line.replace('\n', ' ') for line in descs]
+                # math blocks will add newline at the end
+                descs = [line+'\n' if is_math(line) else line.replace('\n', ' ') for line in descs]
 
                 # store
                 output.setdefault(header, []).append({'name': name})

@@ -143,13 +143,13 @@ def test_parse_numpy_equations():
     # equation in extended
     docstring = ('summary\n\n.. math::\n\n    \\frac{1}{2}')
     assert parse_numpy(docstring) == {'summary': 'summary',
-                                      'extended': ['.. math::\n\n    \\frac{1}{2}\n']}
+                                      'extended': ['.. math::\n\n    \\frac{1}{2}']}
     docstring = ('summary\n\n'
                  '.. math::\n\n'
                  '    x &= 2\\\\\n'
                  '    &= y\\\\\n')
     assert parse_numpy(docstring) == {'summary': 'summary',
-                                      'extended': ['.. math::\n\n    x &= 2\\\\\n    &= y\\\\\n']}
+                                      'extended': ['.. math::\n\n    x &= 2\\\\\n    &= y\\\\']}
 
     # equation in parameter
     # single line equation
