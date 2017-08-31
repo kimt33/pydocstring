@@ -97,21 +97,22 @@ def test_wrap():
 def test_multi_wrap():
     """Test pydocstring.utils.multi_wrap."""
     assert (pydocstring.utils.multi_wrap('a b c d \n  a b c d \n    a b c d ', width=6) ==
-            'a b c\nd\n  a b\n  c d\n    a\n    b\n    c\n    d')
+            'a b c\nd\n  a b\n  c d\n    a\n    b\n    c\n    d\n')
     assert (pydocstring.utils.multi_wrap('a b c d \n  a b c d \n    a b c d ', width=8, tabsize=2,
                                          indent_level=1) ==
-            '  a b c\n  d\n    a b\n    c d\n      a\n      b\n      c\n      d')
+            '  a b c\n  d\n    a b\n    c d\n      a\n      b\n      c\n      d\n')
     assert (pydocstring.utils.multi_wrap('a b c d \n  a b c d \n    a b c d ', width=8, tabsize=1,
                                          indent_level=2) ==
-            '  a b c\n  d\n    a b\n    c d\n      a\n      b\n      c\n      d')
+            '  a b c\n  d\n    a b\n    c d\n      a\n      b\n      c\n      d\n')
 
 
 def test_is_math():
     """Test pydocstring.utils.is_math."""
-    assert pydocstring.utils.is_math('.. math::\n\n    x&=2\\\\    &=3')
-    assert pydocstring.utils.is_math('.. math::\n\n    x&=2\\\\    &=3\n')
-    assert pydocstring.utils.is_math('\n.. math::\n\n    x&=2\\\\    &=3\n\n\n')
-    assert not pydocstring.utils.is_math('x\n.. math::\n\n    x&=2\\\\    &=3\n\n\n')
+    assert pydocstring.utils.is_math('.. math::\n\n    x&=2\\\\\n    &=3')
+    assert pydocstring.utils.is_math('.. math::\n\n    x&=2\\\\\n    &=3\n')
+    assert pydocstring.utils.is_math('\n.. math::\n\n    x&=2\\\\\n    &=3\n\n\n')
+    assert not pydocstring.utils.is_math('x\n.. math::\n\n    x&=2\\\\\n    &=3\n\n\n')
+    assert pydocstring.utils.is_math('.. math::\n\n    x=2')
 
 
 def test_extract_math():

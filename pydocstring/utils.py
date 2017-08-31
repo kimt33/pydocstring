@@ -147,7 +147,7 @@ def multi_wrap(multiline, width=100, indent_level=0, tabsize=4):
     # divide by newline
     multiline = multiline.split('\n')
     # find leading whitespace
-    whitespace = [len(re.search(r'^(\s*).+', line).group(1)) for line in multiline]
+    whitespace = [len(re.search(r'^(\s*).*$', line).group(1)) for line in multiline]
     # wrap each line
     wrapped_multiline = []
     for line, num_space in zip(multiline, whitespace):
@@ -155,8 +155,10 @@ def multi_wrap(multiline, width=100, indent_level=0, tabsize=4):
                                                initial_indent=tab,
                                                subsequent_indent=tab + num_space*' ',
                                                **kwargs))
-
-    return '\n'.join(wrapped_multiline)
+    wrapped_multiline = '\n'.join(wrapped_multiline)
+    # add newline at the end
+    wrapped_multiline = re.sub('\n*$', '\n', wrapped_multiline)
+    return wrapped_multiline
 
 
 def is_math(text):
@@ -174,7 +176,7 @@ def is_math(text):
         False otherwise.
 
     """
-    re_math = re.compile(r'^\n*\.\.\s*math::\n*(?:\n?    .+)+\n?\n*$')
+    re_math = re.compile(r'^\n*\.\.\s*math::\n*(?:\n\s+.+)+\n*$')
     return bool(re_math.search(text))
 
 
