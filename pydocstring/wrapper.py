@@ -3,7 +3,7 @@ import inspect
 from functools import wraps
 from pydocstring.docstring import Docstring
 from pydocstring.numpy_docstring import parse_numpy
-from pydocstring.utils import extract_members
+from pydocstring.utils import extract_members, remove_indent
 
 
 def kwarg_wrapper(wrapper):
@@ -70,11 +70,13 @@ def docstring(obj, style='numpy', width=100, indent_level=0, tabsize=4, is_raw=F
     """
     if obj.__doc__ is None:
         obj.__doc__ = ''
+    doc = obj.__doc__
+    doc = remove_indent(doc, include_firstline=False)
 
     if style == 'numpy':
-        docstring = Docstring(**parse_numpy(obj.__doc__, contains_quotes=False))
+        docstring = Docstring(**parse_numpy(doc, contains_quotes=False))
     elif style == 'code':
-        docstring = obj.__doc__
+        docstring = doc
     else:
         raise NotImplementedError('Only numpy and code (Docstring instance) style are supported at '
                                   'the moment.')
